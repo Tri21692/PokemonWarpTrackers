@@ -1,0 +1,3891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pokemon FireRed/LeafGreen Warp Tracker</title>
+<style>
+  :root {
+    --bg: #0d0d0e;
+    --bg-alt: #161617;
+    --panel: #1c1c1e;
+    --panel-hi: #262628;
+    --line: #3a3a3d;
+    --text: #f2f2f0;
+    --text-dim: #a8a8ac;
+    --gold: #f2c14e;
+    --gold-dim: #8a6a1f;
+    --teal: #e2e2e2;
+    --rose: #ff5a5a;
+    --grey: #6e6e72;
+    --fire: #d62828;
+    --leaf: #2e8b3d;
+    --mono: 'IBM Plex Mono', 'Consolas', monospace;
+    --sans: 'Sora', 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      linear-gradient(135deg, #4a0e0e 0%, #4a0e0e 50%, #0e4a1e 50%, #0e4a1e 100%);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+  header {
+    padding: 34px 24px 20px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: linear-gradient(180deg, var(--bg) 70%, transparent);
+    backdrop-filter: blur(6px);
+    z-index: 20;
+  }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; }
+  h1 { margin: 6px 0 4px; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
+  .sub { color: var(--text-dim); font-size: 13px; max-width: 640px; line-height: 1.5; }
+
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+  input#search {
+    flex: 1; min-width: 200px; background: var(--panel); border: 1px solid var(--line);
+    color: var(--text); padding: 10px 14px; border-radius: 8px; font-family: var(--sans); font-size: 13px; outline: none;
+  }
+  input#search:focus { border-color: var(--gold-dim); }
+  select#filterTag, select#sortBy {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text-dim);
+    padding: 10px 10px; border-radius: 8px; font-family: var(--sans); font-size: 12px;
+  }
+  button.ghost {
+    background: transparent; border: 1px solid var(--line); color: var(--text-dim);
+    padding: 9px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: var(--sans);
+  }
+  button.ghost:hover { border-color: var(--gold-dim); color: var(--gold); }
+  button.ghost:disabled { opacity: 0.35; cursor: not-allowed; }
+  button.ghost:disabled:hover { border-color: var(--line); color: var(--text-dim); }
+  button.primary {
+    background: var(--gold-dim); border: 1px solid var(--gold-dim); color: var(--text);
+    padding: 9px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: var(--sans); font-weight: 700;
+  }
+  button.primary:hover { background: var(--gold); color: var(--text); }
+  button.danger { border-color: #6b1f1f; color: var(--rose); }
+  button.danger:hover { background: rgba(255,90,90,0.15); }
+  button.danger.confirming { background: var(--rose); color: #fff; }
+  .toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .save-status { font-family: var(--mono); font-size: 10.5px; color: var(--teal); opacity: 0; transition: opacity .3s ease; }
+  .save-status.visible { opacity: 1; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(8,8,9,0.65); z-index: 50;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 24px; max-width: 380px; width: 100%;
+  }
+  .modal-box h3 { margin: 0 0 10px; font-size: 16px; color: var(--rose); }
+  .modal-box p { margin: 0 0 20px; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .quick-warp-box h3 { color: var(--gold); }
+  .quick-warp-box-large { max-width: 480px; }
+  .quick-warp-box-large .cf-block { margin-bottom: 14px; }
+  .quick-warp-group-label {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--gold); font-weight: 700; margin-bottom: 10px;
+  }
+  .quick-warp-divider {
+    text-align: center; font-family: var(--mono); font-size: 10px; color: var(--grey);
+    margin: 4px 0 14px; letter-spacing: 1px;
+  }
+  .quick-warp-context {
+    font-family: var(--mono); font-size: 11px; color: var(--teal); margin: -6px 0 16px !important;
+    padding: 8px 10px; background: rgba(85,184,160,0.08); border: 1px solid var(--line); border-radius: 6px;
+    line-height: 1.5 !important;
+  }
+  .quick-warp-field { display: block; margin-bottom: 14px; }
+  .quick-warp-field span { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px; }
+  .quick-warp-field .quick-warp-optional { text-transform: none; color: var(--grey); letter-spacing: 0; }
+  .quick-warp-field input, .quick-warp-field select {
+    width: 100%; background: var(--bg-alt); border: 1px solid var(--line); color: var(--text);
+    border-radius: 6px; padding: 9px 10px; font-family: var(--sans); font-size: 13px; outline: none;
+  }
+  .quick-warp-field input:focus, .quick-warp-field select:focus { border-color: var(--gold-dim); }
+
+  .io-bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 10px 24px; border-bottom: 1px solid var(--line); background: var(--bg-alt);
+  }
+  .io-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey); margin-right: 2px; }
+  .auto-create-label {
+    display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10.5px;
+    color: var(--text-dim); cursor: pointer; user-select: none;
+  }
+  .auto-create-label input { accent-color: var(--gold); cursor: pointer; }
+  .io-bar button { padding: 6px 12px; font-size: 11.5px; }
+  .io-bar button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .io-bar button:disabled:hover { border-color: var(--line); color: var(--text-dim); }
+  .main-menu-link {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    background: transparent; border: 1px solid var(--line); color: var(--text-dim);
+    font-family: var(--sans); font-size: 11.5px; padding: 6px 12px; border-radius: 8px;
+    text-decoration: none; cursor: pointer; flex-shrink: 0;
+  }
+  .main-menu-link:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .io-status { font-family: var(--mono); font-size: 10.5px; color: var(--teal); opacity: 0; transition: opacity .3s ease; }
+  .io-status.visible { opacity: 1; }
+  .io-status.error { color: var(--rose); }
+  #liveTrackingToggle.tracking-on { border-color: var(--teal); color: var(--teal); }
+  .live-status {
+    font-family: var(--mono); font-size: 11px; padding: 8px 24px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .live-status .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .live-status.connected .dot { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+  .live-status.disconnected .dot { background: var(--rose); }
+  .live-status.disconnected { color: var(--rose); }
+  .live-status .jump-live { margin-left: auto; }
+  .icon-btn.capture-signature.has-signature { border-color: var(--teal); color: var(--teal); opacity: 0.55; }
+  .icon-btn.capture-signature.is-live-match {
+    border-color: var(--gold); color: var(--gold); background: rgba(242,193,78,0.25);
+    box-shadow: 0 0 8px rgba(242,193,78,0.6); opacity: 1; animation: pulse 1.2s infinite;
+  }
+
+  .progress-wrap { margin-top: 16px; }
+  .progress-track { height: 8px; border-radius: 5px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); width: 0%; transition: width .3s ease; }
+  .progress-label { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 6px; letter-spacing: 0.5px; }
+
+  main { max-width: 900px; margin: 0 auto; padding: 26px 24px 0; display: flex; flex-direction: column; gap: 14px; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .card.fully-cleared { border-color: var(--gold-dim); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; gap: 10px; }
+  .card-head-left { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; user-select: none; }
+  .chev { color: var(--text-dim); font-size: 12px; transition: transform .2s; flex-shrink: 0; }
+  .card.open .chev { transform: rotate(90deg); }
+  .notes-dot { font-size: 11px; opacity: 0.7; flex-shrink: 0; }
+  .loc-name-input {
+    font-weight: 700; font-size: 15px; background: transparent; border: none; color: var(--text);
+    font-family: var(--sans); padding: 2px 4px; border-radius: 4px; width: 100%;
+  }
+  .loc-name-input:focus { background: var(--bg-alt); outline: 1px solid var(--gold-dim); }
+  .loc-meta { font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); margin-top: 3px; padding: 0 4px; }
+
+  .icon-btn {
+    background: transparent; border: 1px solid var(--line); color: var(--grey); width: 28px; height: 28px;
+    border-radius: 6px; cursor: pointer; font-size: 13px; flex-shrink: 0; line-height: 1;
+  }
+  .icon-btn:hover { border-color: var(--rose); color: var(--rose); }
+  .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .icon-btn:disabled:hover { border-color: var(--line); color: var(--grey); }
+  .icon-btn.confirming { border-color: var(--rose); color: #fff; background: var(--rose); font-size: 9px; width: auto; padding: 0 8px; }
+
+  .move-controls { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+  .move-controls .icon-btn { width: 20px; height: 15px; font-size: 8px; padding: 0; }
+
+  .card-body { display: none; border-top: 1px solid var(--line); padding: 4px 16px 10px; }
+  .card.open .card-body { display: block; }
+
+  .conn { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+  .conn input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--gold); cursor: pointer; flex-shrink: 0; }
+  .conn-fields { flex: 1; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .conn input[type=text] {
+    background: var(--bg-alt); border: 1px solid var(--line); color: var(--text); border-radius: 6px;
+    padding: 7px 9px; font-family: var(--sans); font-size: 12.5px; outline: none;
+  }
+  .conn input[type=text]:focus { border-color: var(--gold-dim); }
+  .conn .f-label { width: 190px; font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); }
+  .conn .f-dest { flex: 1; min-width: 140px; }
+  .conn.taken .f-dest { color: var(--gold); }
+  .arrow { color: var(--grey); font-size: 12px; flex-shrink: 0; }
+  select.tag-select {
+    background: var(--bg-alt); border: 1px solid var(--line); color: var(--text-dim);
+    font-family: var(--mono); font-size: 10px; border-radius: 6px; padding: 6px 4px;
+  }
+  select.direction-select {
+    background: var(--bg-alt); border: 1px solid var(--line); color: var(--text-dim);
+    font-family: var(--mono); font-size: 10px; border-radius: 6px; padding: 6px 4px;
+  }
+
+  .add-row { margin-top: 6px; display: flex; gap: 8px; }
+  .add-row button { flex: 1; padding: 7px; }
+  .section-row {
+    align-items: center; gap: 8px; background: rgba(255,255,255,0.03);
+    border-radius: 6px; padding-left: 8px; padding-right: 4px;
+  }
+  .section-icon { flex-shrink: 0; opacity: 0.8; }
+  .section-name {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--text-dim); flex: 1;
+  }
+  input.f-section-name {
+    flex: 1; background: var(--bg-alt); border: 1px solid var(--line); color: var(--text);
+    border-radius: 6px; padding: 6px 10px; font-family: var(--mono); font-size: 11.5px;
+  }
+
+  .head-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .loc-name-display { font-weight: 700; font-size: 15px; padding: 2px 4px; }
+
+  .conn-view {
+    flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;
+    background: transparent; border: none; padding: 4px; margin: -4px; border-radius: 6px;
+    text-align: left; font-family: inherit; cursor: pointer; color: var(--text);
+  }
+  .conn-view:hover { background: rgba(255,255,255,0.04); }
+  .cv-main { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .cv-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .cv-meta:empty { display: none; }
+  .cv-other-end { padding-top: 3px; border-top: 1px dashed var(--line); }
+  .conn-view .v-label { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--text-dim); }
+  .conn-view .v-dest { font-size: 13.5px; font-weight: 700; }
+  .conn-view .v-dest.empty { color: var(--grey); font-style: italic; }
+  .conn.taken .conn-view .v-dest { color: var(--gold); }
+  .conn-actions { display: flex; gap: 6px; flex-shrink: 0; margin-left: auto; }
+  .conn[data-depth="1"] { margin-left: 26px; border-left: 2px solid var(--line); padding-left: 10px; }
+  .conn[data-depth="2"] { margin-left: 52px; border-left: 2px solid var(--line); padding-left: 10px; }
+  .nest-marker { color: var(--grey); font-size: 12px; flex-shrink: 0; }
+
+  .drag-handle {
+    flex-shrink: 0; color: var(--grey); font-size: 12px; cursor: grab; letter-spacing: -2px;
+    padding: 4px 2px; user-select: none;
+  }
+  .drag-handle:hover { color: var(--text-dim); }
+  .conn.dragging { opacity: 0.35; }
+  .conn.drag-over-top { box-shadow: inset 0 2px 0 0 var(--gold); }
+  .conn.drag-over-bottom { box-shadow: inset 0 -2px 0 0 var(--gold); }
+  .card-body.drag-over-body { background: rgba(214,40,40,0.04); outline: 1px dashed var(--gold-dim); outline-offset: -4px; }
+
+  .section-name-trigger {
+    background: transparent; border: none; padding: 4px 6px; margin: -4px -6px; border-radius: 6px;
+    cursor: pointer; flex: 1; text-align: left; font-family: inherit; color: var(--text);
+  }
+  .section-name-trigger:hover { background: rgba(255,255,255,0.06); }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.6px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;
+  }
+  .tag.boss { background: rgba(214,40,40,0.3); color: #ff8a8a; border: 1px solid var(--gold); box-shadow: 0 0 6px rgba(214,40,40,0.35); }
+  .tag.warning { background: rgba(255,90,90,0.28); color: #ffb3b3; border: 1px solid var(--rose); }
+  .tag.useless { background: rgba(110,110,114,0.35); color: #d4d4d8; border: 1px solid var(--grey); }
+  .tag.unknown { background: rgba(255,255,255,0.08); color: var(--text); border: 1px dashed var(--text-dim); }
+
+  .connector-badge {
+    display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 999px; cursor: pointer; border: 1px solid var(--line);
+    background: transparent; color: var(--grey);
+  }
+  .connector-badge.pending { border: 1px dashed var(--grey); color: var(--text-dim); }
+  .connector-badge.bridge {
+    background: rgba(224,224,224,0.18); color: var(--teal); border: 1px solid var(--teal); font-weight: 600;
+  }
+  .connector-badge.bridge:hover { background: rgba(224,224,224,0.32); }
+  .connector-badge.pending:hover { border-color: var(--text-dim); }
+  input.f-floor, input.f-end-floor {
+    width: 64px !important; font-family: var(--mono); text-align: center;
+  }
+  input.f-door, input.f-end-door {
+    width: 64px !important; font-family: var(--mono); text-align: center;
+  }
+  .cf-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .cf-row + .cf-row, .cf-row + .cf-block, .cf-block + .cf-block { margin-top: 5px; }
+  .cf-block { display: flex; flex-direction: column; gap: 3px; }
+  .cf-fields-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .cf-tag-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase;
+    color: var(--grey);
+  }
+  .cf-other-end { padding-top: 8px; border-top: 1px dashed var(--line); }
+  .cf-other-end .cf-tag-label { color: var(--teal); }
+  .cf-end-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .cf-end-actions .icon-btn { width: 24px; height: 24px; font-size: 11px; }
+  select.end-direction-select {
+    background: var(--bg-alt); border: 1px solid var(--line); color: var(--text-dim);
+    font-family: var(--mono); font-size: 10px; border-radius: 6px; padding: 6px 4px;
+  }
+  .floor-badge {
+    display: inline-flex; align-items: center; gap: 2px; font-family: var(--mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 999px; background: rgba(224,224,224,0.08); color: var(--text-dim);
+    border: 1px solid var(--line);
+  }
+  .door-badge {
+    display: inline-flex; align-items: center; gap: 2px; font-family: var(--mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 999px; background: rgba(214,40,40,0.08); color: var(--text-dim);
+    border: 1px solid var(--line);
+  }
+  .hierarchy-badge {
+    display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 999px; background: rgba(214,40,40,0.12); color: var(--gold);
+    border: 1px solid var(--gold-dim); font-weight: 600;
+  }
+  .conn.connector-flash { animation: flash 1.6s ease; }
+  .card.connector-flash .card-head { animation: flash 1.6s ease; }
+  @keyframes flash {
+    0% { background: rgba(224,224,224,0.35); }
+    100% { background: transparent; }
+  }
+
+  .v-icon { display: inline-block; width: 16px; text-align: center; flex-shrink: 0; color: var(--text-dim); }
+
+  .icon-btn.link-conn.active { border-color: var(--gold); color: var(--gold); background: rgba(214,40,40,0.15); animation: pulse 1.2s infinite; }
+  .icon-btn.smart-link { border-color: #555555; color: var(--teal); }
+  .icon-btn.smart-link:hover { border-color: var(--teal); background: rgba(224,224,224,0.15); }
+  .smart-candidate {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    background: var(--bg-alt); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 8px;
+  }
+  .sc-text { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+  .sc-loc { font-size: 13px; font-weight: 700; }
+  .sc-conn { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+  .sc-score { font-family: var(--mono); font-size: 9.5px; color: var(--grey); margin-top: 2px; }
+  .smart-candidate.sc-create { border: 1px dashed var(--teal); background: rgba(224,224,224,0.06); }
+  .smart-candidate.sc-create .sc-loc { color: var(--teal); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  .link-banner {
+    display: none; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    background: rgba(214,40,40,0.12); border: 1px solid var(--gold-dim); border-radius: 8px;
+    padding: 9px 14px; margin-top: 14px; font-size: 12.5px; color: var(--gold);
+  }
+  .link-banner.visible { display: flex; }
+  .link-banner button { background: transparent; border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 6px; padding: 5px 10px; font-size: 11.5px; cursor: pointer; font-family: var(--sans); }
+
+  .connector-index { margin-top: 12px; }
+  .idx-toggle {
+    display: flex; align-items: center; gap: 7px; background: transparent; border: 1px solid var(--line);
+    color: var(--text-dim); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.5px;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  }
+  .idx-toggle:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .idx-chev { font-size: 9px; color: var(--grey); }
+  .idx-body { flex-direction: column; gap: 10px; margin-top: 8px; padding: 10px 12px; background: var(--bg-alt); border: 1px solid var(--line); border-radius: 10px; }
+  .idx-group { display: flex; flex-direction: column; gap: 6px; }
+  .idx-group-label {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
+  }
+  .idx-group-label.bridge { color: var(--teal); }
+  .idx-group-label.pending { color: var(--grey); }
+  .idx-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .connector-chip {
+    font-family: var(--mono); font-size: 10.5px; padding: 3px 9px; border-radius: 999px; cursor: pointer;
+    background: transparent; color: var(--text-dim); border: 1px dashed var(--grey);
+  }
+  .connector-chip.bridge {
+    background: rgba(224,224,224,0.12); color: var(--teal); border: 1px solid var(--teal); font-weight: 600;
+  }
+  .connector-chip.bridge:hover { background: rgba(224,224,224,0.28); }
+  .connector-chip.pending:hover { border-color: var(--text-dim); }
+  .connector-chip-wrap { display: inline-flex; align-items: center; gap: 2px; }
+  .chip-del {
+    background: transparent; border: 1px solid var(--line); color: var(--grey); width: 18px; height: 18px;
+    border-radius: 5px; cursor: pointer; font-size: 10px; line-height: 1; flex-shrink: 0; font-family: var(--sans);
+  }
+  .chip-del:hover { border-color: var(--rose); color: var(--rose); }
+  .chip-del.confirming { border-color: var(--rose); color: #fff; background: var(--rose); font-size: 8px; width: auto; padding: 0 5px; }
+
+  .badge-del {
+    background: transparent; border: none; color: var(--grey); cursor: pointer; font-size: 13px;
+    padding: 0 2px; line-height: 1; margin-left: -3px;
+  }
+  .badge-del:hover { color: var(--rose); }
+
+  .notes-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .notes-row label { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; }
+  .notes-row textarea {
+    width: 100%; min-height: 44px; background: var(--bg-alt); border: 1px solid var(--line); color: var(--text);
+    border-radius: 6px; padding: 8px 10px; font-family: var(--sans); font-size: 12.5px; resize: none; outline: none;
+    overflow: hidden;
+  }
+  .notes-row textarea:focus { border-color: var(--gold-dim); }
+
+  .empty { text-align: center; color: var(--text-dim); padding: 60px 20px; font-family: var(--mono); font-size: 12px; }
+  .add-location-wrap { max-width: 900px; margin: 4px auto 0; padding: 0 24px; }
+
+  footer { max-width: 900px; margin: 30px auto 0; padding: 0 24px; color: var(--grey); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.5px; }
+
+  @media (max-width: 520px) {
+    h1 { font-size: 21px; }
+    main { padding: 18px 14px 0; }
+    .io-bar { padding: 9px 14px; gap: 8px; }
+    .live-status { padding: 8px 14px; flex-wrap: wrap; }
+    .live-status .jump-live { margin-left: 0; margin-top: 4px; }
+    .conn .f-label { width: 130px; }
+    .icon-btn { width: 25px; height: 25px; font-size: 11px; }
+    .conn-actions { gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .move-controls .icon-btn { width: 18px; height: 13px; font-size: 7px; }
+    .conn[data-depth="1"] { margin-left: 14px; padding-left: 6px; }
+    .conn[data-depth="2"] { margin-left: 28px; padding-left: 6px; }
+    .conn { flex-wrap: wrap; }
+    .conn-view { min-width: 100%; order: 1; }
+    .conn-actions { order: 2; margin-left: 0; width: 100%; padding-top: 6px; }
+    .cf-fields-row { gap: 4px; }
+    input.f-floor, input.f-door, input.f-end-floor, input.f-end-door { width: 54px !important; }
+  }
+
+  .glossary-tab {
+    position: fixed; top: 50%; right: 0; transform: translateY(-50%);
+    background: var(--panel); border: 1px solid var(--line); border-right: none;
+    color: var(--gold); font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+    padding: 12px 8px; border-radius: 8px 0 0 8px; cursor: pointer; z-index: 30;
+    writing-mode: vertical-rl; text-transform: uppercase;
+  }
+  .glossary-tab:hover { background: var(--panel-hi); }
+
+  .glossary-panel {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 300px; max-width: 85vw;
+    background: var(--bg-alt); border-left: 1px solid var(--line);
+    transform: translateX(100%); transition: transform .25s ease; z-index: 40;
+    overflow-y: auto; padding: 20px 20px 40px;
+  }
+  .glossary-panel.open { transform: translateX(0); }
+  .glossary-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .glossary-head h2 { font-size: 16px; margin: 0; }
+  .glossary-close { background: transparent; border: 1px solid var(--line); color: var(--text-dim); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .glossary-close:hover { border-color: var(--rose); color: var(--rose); }
+  .glossary-sub { color: var(--text-dim); font-size: 11.5px; line-height: 1.5; margin-bottom: 18px; }
+
+  .g-section { margin-bottom: 22px; }
+  .g-section h3 {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--grey); margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
+  }
+  .g-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .g-icon { flex-shrink: 0; width: 26px; text-align: center; font-size: 13px; margin-top: 1px; }
+  .g-text { font-size: 12px; line-height: 1.5; color: var(--text); }
+  .g-text b { color: var(--text); }
+  .g-text .g-sample { display: inline-block; margin-bottom: 3px; }
+
+  .glossary-overlay {
+    position: fixed; inset: 0; background: rgba(8,8,9,0.5); z-index: 35;
+    opacity: 0; pointer-events: none; transition: opacity .25s ease;
+  }
+  .glossary-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .toc-tab {
+    position: fixed; top: 50%; left: 0; transform: translateY(-50%);
+    background: var(--panel); border: 1px solid var(--line); border-left: none;
+    color: var(--teal); font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+    padding: 12px 8px; border-radius: 0 8px 8px 0; cursor: pointer; z-index: 30;
+    writing-mode: vertical-rl; text-transform: uppercase;
+  }
+  .toc-tab:hover { background: var(--panel-hi); }
+
+  .toc-panel {
+    position: fixed; top: 0; left: 0; height: 100vh; width: 300px; max-width: 85vw;
+    background: var(--bg-alt); border-right: 1px solid var(--line);
+    transform: translateX(-100%); transition: transform .25s ease; z-index: 40;
+    overflow-y: auto; padding: 20px 20px 40px;
+  }
+  .toc-panel.open { transform: translateX(0); }
+  .toc-overlay {
+    position: fixed; inset: 0; background: rgba(8,8,9,0.5); z-index: 35;
+    opacity: 0; pointer-events: none; transition: opacity .25s ease;
+  }
+  .toc-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .toc-list { list-style: none; margin: 0; padding: 0; }
+  .toc-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 9px 8px; border-radius: 6px; cursor: pointer; font-size: 12.5px; margin-bottom: 2px;
+  }
+  .toc-item:hover { background: var(--panel-hi); }
+  .toc-item .t-name { flex: 1; }
+  .toc-item.t-cleared .t-name { color: var(--gold); }
+  .toc-item .t-count { font-family: var(--mono); font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+  .toc-item .t-num { font-family: var(--mono); font-size: 10px; color: var(--grey); width: 20px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="io-bar">
+  <span class="io-label">Backup</span>
+  <button class="ghost" id="exportBtn">Export JSON</button>
+  <button class="ghost" id="importBtn">Import JSON</button>
+  <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
+  <span class="io-status" id="ioStatus"></span>
+  <span class="io-label" style="margin-left:14px;">Live Tracking</span>
+  <button class="ghost" id="liveTrackingToggle">&#128225; Off</button>
+  <label class="auto-create-label">
+    <input type="checkbox" id="autoCreateToggle" checked>
+    Auto-create new warps
+  </label>
+  <a class="main-menu-link" href="index.html" title="Back to the main menu">&#8962; Main Menu</a>
+</div>
+<div class="live-status" id="liveStatus" style="display:none;"></div>
+
+<datalist id="allLocationsList"></datalist>
+
+<div class="modal-overlay" id="quickWarpModal">
+  <div class="modal-box quick-warp-box quick-warp-box-large">
+    <h3>New warp detected</h3>
+    <p class="quick-warp-context" id="quickWarpContext"></p>
+
+    <div class="quick-warp-group-label">Starting point warp</div>
+    <label class="quick-warp-field">
+      <span>Location</span>
+      <input type="text" id="quickWarpStartLocation" list="allLocationsList" placeholder="Type or pick a location&hellip;" autocomplete="off">
+    </label>
+    <label class="quick-warp-field">
+      <span>Overwrite existing warp <span class="quick-warp-optional">(optional)</span></span>
+      <select id="quickWarpStartOverwrite"><option value="">&#8722; Create new warp &#8722;</option></select>
+    </label>
+    <label class="quick-warp-field">
+      <span>Name this warp</span>
+      <input type="text" id="quickWarpStartLabel" placeholder="e.g. Poke Center, Door 2&hellip;" autocomplete="off">
+    </label>
+    <label class="quick-warp-field">
+      <span>Section <span class="quick-warp-optional">(optional, for hierarchies)</span></span>
+      <input type="text" id="quickWarpStartSection" list="quickWarpStartSectionList" placeholder="Leave blank for top-level, or type/pick a section&hellip;" autocomplete="off">
+      <datalist id="quickWarpStartSectionList"></datalist>
+    </label>
+    <div class="cf-block">
+      <div class="cf-fields-row">
+        <input type="text" class="f-floor" id="quickWarpStartFloor" placeholder="floor" title="Floor number (optional)">
+        <input type="text" class="f-door" id="quickWarpStartDoor" placeholder="door #" title="Door number (optional)">
+        <select class="direction-select" id="quickWarpStartDirection" title="Up/Down/Exit (optional)"></select>
+      </div>
+    </div>
+
+    <div class="quick-warp-divider">&#8681; leads to &#8681;</div>
+
+    <div class="quick-warp-group-label">Destination warp</div>
+    <label class="quick-warp-field">
+      <span>Location</span>
+      <input type="text" id="quickWarpLocation" list="allLocationsList" placeholder="Type or pick a location&hellip;" autocomplete="off">
+    </label>
+    <label class="quick-warp-field">
+      <span>Overwrite existing warp <span class="quick-warp-optional">(optional)</span></span>
+      <select id="quickWarpOverwrite"><option value="">&#8722; Create new warp &#8722;</option></select>
+    </label>
+    <label class="quick-warp-field">
+      <span>Name this warp</span>
+      <input type="text" id="quickWarpLabel" placeholder="e.g. Poke Center, Door 2&hellip;" autocomplete="off">
+    </label>
+    <label class="quick-warp-field">
+      <span>Section <span class="quick-warp-optional">(optional, for hierarchies)</span></span>
+      <input type="text" id="quickWarpSection" list="quickWarpSectionList" placeholder="Leave blank for top-level, or type/pick a section&hellip;" autocomplete="off">
+      <datalist id="quickWarpSectionList"></datalist>
+    </label>
+    <div class="cf-block">
+      <div class="cf-fields-row">
+        <input type="text" class="f-floor" id="quickWarpFloor" placeholder="floor" title="Floor number (optional)">
+        <input type="text" class="f-door" id="quickWarpDoor" placeholder="door #" title="Door number (optional)">
+        <select class="direction-select" id="quickWarpDirection" title="Up/Down/Exit (optional)"></select>
+        <select class="tag-select" id="quickWarpTag" title="Tag this warp"></select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="ghost" id="quickWarpIgnore" title="Never prompt for this exact transition again">Don't track this</button>
+      <button class="ghost" id="quickWarpSkip">Skip for now</button>
+      <button class="ghost danger" id="quickWarpSave" style="border-color:var(--gold-dim); color:var(--gold);">Save (Enter)</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="importModal">
+  <div class="modal-box">
+    <h3>Import data?</h3>
+    <p id="importModalText">This will replace everything currently in the log with the contents of the file you selected. This can't be undone.</p>
+    <div class="modal-actions">
+      <button class="ghost" id="importCancel">Cancel</button>
+      <button class="ghost danger" id="importConfirm">Yes, import and replace</button>
+    </div>
+  </div>
+</div>
+
+
+<header>
+  <div class="eyebrow">Warp Randomizer &middot; Route Journal</div>
+  <h1>Pokemon FireRed/LeafGreen Warp Tracker</h1>
+  <div class="sub">Blank slate, built around the locations you've already scouted. Log a warp's destination as you find it, and add or remove entries anywhere as the run reveals itself. Good luck!</div>
+
+  <div class="controls">
+    <input id="search" type="text" placeholder="Search a location, entry point or destination&hellip;">
+    <select id="filterTag">
+      <option value="all">All tags</option>
+      <option value="boss">Boss / Notable</option>
+      <option value="warning">Warning</option>
+      <option value="useless">Useless</option>
+      <option value="unknown">Unconfirmed</option>
+    </select>
+    <select id="sortBy">
+      <option value="doc">Document order</option>
+      <option value="linear">Linear progression</option>
+      <option value="az">A&ndash;Z</option>
+      <option value="incomplete">Least logged first</option>
+    </select>
+    <button class="ghost" id="expandAll">Expand all</button>
+    <button class="ghost" id="collapseAll">Collapse all</button>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 0 warps logged</div>
+  </div>
+  <div class="connector-index" id="connectorIndex"></div>
+  <div class="link-banner" id="linkBanner">
+    <span id="linkBannerText">Pick the warp on the other end &mdash; click its link icon.</span>
+    <button id="linkCancel">Cancel</button>
+  </div>
+</header>
+
+<div class="add-location-wrap">
+  <div class="toolbar-row">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="primary" id="addLocation">+ Add location</button>
+      <button class="ghost" id="undoBtn" title="Undo the last change (Ctrl+Z)" disabled>&#8630; Undo</button>
+      <button class="ghost" id="redoBtn" title="Redo the last undone change (Ctrl+Y)" disabled>&#8631; Redo</button>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="ghost danger" id="clearAll">Clear all data</button>
+    </div>
+  </div>
+</div>
+
+<main id="main"></main>
+<div class="empty" id="emptyMsg" style="display:none;">No locations match that search.</div>
+
+<footer>Data persists per-browser. Add a warp with the button at the bottom of any card; delete one with the &times; beside it. Deleting a whole location asks for a second click to confirm.</footer>
+
+<div class="modal-overlay" id="smartLinkModal">
+  <div class="modal-box">
+    <h3>Smart Link</h3>
+    <p id="smartLinkIntro">Found a likely match &mdash; take a look and confirm before it's linked.</p>
+    <div id="smartLinkCandidates"></div>
+    <div class="modal-actions">
+      <button class="ghost" id="smartLinkCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="clearModal">
+  <div class="modal-box">
+    <h3>Clear everything?</h3>
+    <p>This wipes every location, warp, connector and note you've entered — including the starting Sandgem Town warps — down to a completely blank log with no destinations filled in anywhere. This can't be undone.</p>
+    <div class="modal-actions">
+      <button class="ghost" id="clearCancel">Cancel</button>
+      <button class="ghost danger" id="clearConfirm">Yes, clear everything</button>
+    </div>
+  </div>
+</div>
+
+<button class="toc-tab" id="tocTab">Contents</button>
+<div class="toc-overlay" id="tocOverlay"></div>
+<div class="toc-panel" id="tocPanel">
+  <div class="glossary-head">
+    <h2>Contents</h2>
+    <button class="glossary-close" id="tocClose">&times;</button>
+  </div>
+  <div class="glossary-sub">Every location in the log, in the order the list is currently sorted. Click one to jump straight to it.</div>
+  <ul class="toc-list" id="tocList"></ul>
+</div>
+
+<button class="glossary-tab" id="glossaryTab">Glossary</button>
+<div class="glossary-overlay" id="glossaryOverlay"></div>
+<div class="glossary-panel" id="glossaryPanel">
+  <div class="glossary-head">
+    <h2>Glossary</h2>
+    <button class="glossary-close" id="glossaryClose">&times;</button>
+  </div>
+  <div class="glossary-sub">What the icons and colors mean, and how the linking system works.</div>
+
+  <div class="g-section">
+    <h3>Connectors</h3>
+    <div class="g-row">
+      <div class="g-icon">&#128279;</div>
+      <div class="g-text"><b>Bridge</b> &mdash; this number appears on two or more warps. Both ends are confirmed connected. Click it to jump straight to the other end.</div>
+    </div>
+    <div class="g-row">
+      <div class="g-icon">&#8853;</div>
+      <div class="g-text"><b>Pending</b> &mdash; only one warp has this number so far. It's a placeholder waiting for its match.</div>
+    </div>
+    <div class="g-row">
+      <div class="g-icon" style="color:var(--rose);">&times;</div>
+      <div class="g-text">Next to a badge: unlinks <i>just that warp</i> from the connector. In the Connectors index: deletes the connector everywhere (click twice to confirm).</div>
+    </div>
+  </div>
+
+  <div class="g-section">
+    <h3>Floor &amp; door</h3>
+    <div class="g-row">
+      <div class="g-text">Two optional fields for buildings with internal structure &mdash; a <b>floor</b> (e.g. <b>1F</b>, <b>2F</b>) and a <b>door #</b>, each shown as a small badge on the row. Leave either blank for a warp they don't apply to.</div>
+    </div>
+  </div>
+
+  <div class="g-section">
+    <h3>Row actions</h3>
+    <div class="g-row">
+      <div class="g-icon">&#128279;</div>
+      <div class="g-text"><b>Link</b> &mdash; click on one warp, then click it on another to connect them. Reuses a number if either side already has one, otherwise hands out the next free number.</div>
+    </div>
+    <div class="g-row">
+      <div class="g-icon">&#9998;</div>
+      <div class="g-text"><b>Edit</b> &mdash; opens the entry point, destination and connector fields for that warp. Click the checkmark to lock it back in.</div>
+    </div>
+    <div class="g-row">
+      <div class="g-icon" style="color:var(--rose);">&times;</div>
+      <div class="g-text"><b>Delete</b> &mdash; removes a warp. On a whole location, needs a second click to confirm.</div>
+    </div>
+    <div class="g-row">
+      <div class="g-icon">&#9744;</div>
+      <div class="g-text"><b>Checkbox</b> &mdash; mark a warp as logged once you know where it leads.</div>
+    </div>
+  </div>
+
+  <div class="g-section">
+    <h3>Tags</h3>
+    <div class="g-row"><div class="g-text"><span class="g-sample"><span class="tag boss">Notable</span></span><br>Boss fight, legendary, or another important encounter.</div></div>
+    <div class="g-row"><div class="g-text"><span class="g-sample"><span class="tag warning">Warning</span></span><br>Risky, one-way, or otherwise dangerous to take blind.</div></div>
+    <div class="g-row"><div class="g-text"><span class="g-sample"><span class="tag useless">Useless</span></span><br>Dead end &mdash; nothing worth backtracking for.</div></div>
+    <div class="g-row"><div class="g-text"><span class="g-sample"><span class="tag unknown">Unconfirmed</span></span><br>Noted, but not personally verified yet.</div></div>
+  </div>
+</div>
+
+<script>
+const BLANK_TEMPLATE_SOURCE = [
+  { name: "Pallet Town", entries: [ { label: "(Main Area)" }, { label: "Player's House 1F" }, { label: "Player's House 2F" }, { label: "Rival's House" }, { label: "Professor Oak's Lab" } ] },
+  { name: "Viridian City", entries: [ { label: "(Main Area)" }, { label: "House 1" }, { label: "Gym" }, { label: "House 2" }, { label: "Mart" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" } ] },
+  { name: "Pewter City", entries: [ { label: "(Main Area)" }, { label: "Museum 1F" }, { label: "Museum 2F" }, { label: "Gym" }, { label: "Mart" }, { label: "House 1" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "House 2" } ] },
+  { name: "Cerulean City", entries: [ { label: "(Main Area)" }, { label: "House 1" }, { label: "House 2" }, { label: "House 3" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Gym" }, { label: "Bike Shop" }, { label: "Mart" }, { label: "House 4" }, { label: "House 5" } ] },
+  { name: "Vermilion City", entries: [ { label: "(Main Area)" }, { label: "House 1" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Pokemon Fan Club" }, { label: "House 2" }, { label: "Mart" }, { label: "Gym" }, { label: "House 3" } ] },
+  { name: "Lavender Town", entries: [ { label: "(Main Area)" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Volunteer Pokemon House" }, { label: "House 1" }, { label: "House 2" }, { label: "Art" } ] },
+  { name: "Celadon City", entries: [ { label: "(Main Area)" }, { label: "Department Store 1F" }, { label: "Department Store 2F" }, { label: "Department Store 3F" }, { label: "Department Store 4F" }, { label: "Department Store 5F" }, { label: "Department Store Roof" }, { label: "Department Store Elevator" }, { label: "Condominiums 1F" }, { label: "Condominiums 2F" }, { label: "Condominiums 3F" }, { label: "Condominiums Roof" }, { label: "Condominiums Roof Room" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Game Corner" }, { label: "Game Corner Prize Room" }, { label: "Gym" }, { label: "Restaurant" }, { label: "House 1" }, { label: "Hotel" } ] },
+  { name: "Fuchsia City", entries: [ { label: "(Main Area)" }, { label: "Safari Zone Entrance" }, { label: "Mart" }, { label: "Safari Zone Office" }, { label: "Gym" }, { label: "House 1" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Wardens House" }, { label: "House 2" }, { label: "House 3" } ] },
+  { name: "Saffron City", entries: [ { label: "(Main Area)" }, { label: "Connection" }, { label: "Copycats House 1F" }, { label: "Copycats House 2F" }, { label: "Dojo" }, { label: "Gym" }, { label: "House" }, { label: "Mart" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Mr. Psychics House" }, { label: "Pokemon Trainer Fan Club" } ] },
+  { name: "Cinnabar Island", entries: [ { label: "(Main Area)" }, { label: "Gym" }, { label: "Pokemon Lab Entrance" }, { label: "Pokemon Lab Lounge" }, { label: "Pokemon Lab Research Room" }, { label: "Pokemon Lab Experiment Room" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Mart" } ] },
+  { name: "Indigo Plateau", entries: [ { label: "Exterior" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" } ] },
+  { name: "One Island", entries: [ { label: "Kindle Road Ember Spa" }, { label: "(Main Area)" }, { label: "Kindle Road" }, { label: "Treasure Beach" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "House 1" }, { label: "House 2" }, { label: "Harbor" } ] },
+  { name: "Two Island", entries: [ { label: "(Main Area)" }, { label: "Cape Brink" }, { label: "Joyful Game Corner" }, { label: "House" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Harbor" }, { label: "Cape Brink House" } ] },
+  { name: "Three Island", entries: [ { label: "Berry Forest" }, { label: "Dunsparce Tunnel" }, { label: "(Main Area)" }, { label: "Bond Bridge" }, { label: "Port" }, { label: "House 1" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Mart" }, { label: "House 2" }, { label: "House 3" }, { label: "House 4" }, { label: "House 5" }, { label: "Harbor" } ] },
+  { name: "Four Island", entries: [ { label: "Icefall Cave Entrance" }, { label: "Icefall Cave 1F" }, { label: "Icefall Cave B1F" }, { label: "Icefall Cave Back" }, { label: "(Main Area)" }, { label: "Pokemon Day Care" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "House 1" }, { label: "Loreleis House" }, { label: "Harbor" }, { label: "House 2" }, { label: "Mart" } ] },
+  { name: "Five Island", entries: [ { label: "Rocket Warehouse" }, { label: "Lost Cave Entrance" }, { label: "Lost Cave Room 1" }, { label: "Lost Cave Room 2" }, { label: "Lost Cave Room 3" }, { label: "Lost Cave Room 4" }, { label: "Lost Cave Room 5" }, { label: "Lost Cave Room 6" }, { label: "Lost Cave Room 7" }, { label: "Lost Cave Room 8" }, { label: "Lost Cave Room 9" }, { label: "Lost Cave Room 10" }, { label: "Lost Cave Room 11" }, { label: "Lost Cave Room 12" }, { label: "Lost Cave Room 13" }, { label: "Lost Cave Room 14" }, { label: "(Main Area)" }, { label: "Resort Gorgeous" }, { label: "Water Labyrinth" }, { label: "Meadow" }, { label: "Memorial Pillar" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Harbor" }, { label: "House 1" }, { label: "House 2" }, { label: "Resort Gorgeous House" } ] },
+  { name: "Six Island", entries: [ { label: "Dotted Hole 1F" }, { label: "Dotted Hole B1F" }, { label: "Dotted Hole B2F" }, { label: "Dotted Hole B3F" }, { label: "Dotted Hole B4F" }, { label: "Dotted Hole Sapphire Room" }, { label: "Pattern Bush" }, { label: "Altering Cave" }, { label: "(Main Area)" }, { label: "Outcast Island" }, { label: "Green Path" }, { label: "Water Path" }, { label: "Ruin Valley" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Harbor" }, { label: "House" }, { label: "Mart" }, { label: "Water Path House 1" }, { label: "Water Path House 2" } ] },
+  { name: "Seven Island", entries: [ { label: "Tanoby Ruins Monean Chamber" }, { label: "Tanoby Ruins Liptoo Chamber" }, { label: "Tanoby Ruins Weepth Chamber" }, { label: "Tanoby Ruins Dilford Chamber" }, { label: "Tanoby Ruins Sufib Chamber" }, { label: "Tanoby Ruins Rixy Chamber" }, { label: "Tanoby Ruins Viapois Chamber" }, { label: "Sevault Canyon Tanoby Key" }, { label: "(Main Area)" }, { label: "Trainer Tower" }, { label: "Sevault Canyon Entrance" }, { label: "Sevault Canyon" }, { label: "Tanoby Ruins" }, { label: "House Room 1" }, { label: "House Room 2" }, { label: "Mart" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" }, { label: "Unused House" }, { label: "Harbor" }, { label: "Sevault Canyon House" } ] },
+  { name: "Route 1", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 2", entries: [ { label: "(Main Area)" }, { label: "Viridian Forest South Entrance" }, { label: "House" }, { label: "East Building" }, { label: "Viridian Forest North Entrance" } ] },
+  { name: "Route 3", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 4", entries: [ { label: "(Main Area)" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" } ] },
+  { name: "Route 5", entries: [ { label: "(Main Area)" }, { label: "Pokemon Day Care" }, { label: "South Entrance" } ] },
+  { name: "Route 6", entries: [ { label: "(Main Area)" }, { label: "North Entrance" }, { label: "Unused House" } ] },
+  { name: "Route 7", entries: [ { label: "(Main Area)" }, { label: "East Entrance" } ] },
+  { name: "Route 8", entries: [ { label: "(Main Area)" }, { label: "West Entrance" } ] },
+  { name: "Route 9", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 10", entries: [ { label: "(Main Area)" }, { label: "Pokemon Center 1F" }, { label: "Pokemon Center 2F" } ] },
+  { name: "Route 11", entries: [ { label: "(Main Area)" }, { label: "East Entrance 1F" }, { label: "East Entrance 2F" } ] },
+  { name: "Route 12", entries: [ { label: "(Main Area)" }, { label: "North Entrance 1F" }, { label: "North Entrance 2F" }, { label: "Fishing House" } ] },
+  { name: "Route 13", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 14", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 15", entries: [ { label: "(Main Area)" }, { label: "West Entrance 1F" }, { label: "West Entrance 2F" } ] },
+  { name: "Route 16", entries: [ { label: "(Main Area)" }, { label: "House" }, { label: "North Entrance 1F" }, { label: "North Entrance 2F" } ] },
+  { name: "Route 17", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 18", entries: [ { label: "(Main Area)" }, { label: "East Entrance 1F" }, { label: "East Entrance 2F" } ] },
+  { name: "Route 19", entries: [ { label: "(Main Area)" }, { label: "Unused House" } ] },
+  { name: "Route 20", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 21", entries: [ { label: "North" }, { label: "South" } ] },
+  { name: "Route 22", entries: [ { label: "(Main Area)" }, { label: "North Entrance" } ] },
+  { name: "Route 23", entries: [ { label: "(Main Area)" }, { label: "Unused House" } ] },
+  { name: "Route 24", entries: [ { label: "(Main Area)" } ] },
+  { name: "Route 25", entries: [ { label: "(Main Area)" }, { label: "Sea Cottage" } ] },
+  { name: "Viridian Forest", entries: [ { label: "(Main Area)" } ] },
+  { name: "Mt. Moon", entries: [ { label: "1F" }, { label: "B1F" }, { label: "B2F" } ] },
+  { name: "Diglett's Cave", entries: [ { label: "North Entrance" }, { label: "B1F" }, { label: "South Entrance" } ] },
+  { name: "Rock Tunnel", entries: [ { label: "1F" }, { label: "B1F" } ] },
+  { name: "Power Plant", entries: [ { label: "(Main Area)" } ] },
+  { name: "Seafoam Islands", entries: [ { label: "1F" }, { label: "B1F" }, { label: "B2F" }, { label: "B3F" }, { label: "B4F" } ] },
+  { name: "Pokemon Mansion", entries: [ { label: "1F" }, { label: "2F" }, { label: "3F" }, { label: "B1F" } ] },
+  { name: "Cerulean Cave", entries: [ { label: "1F" }, { label: "2F" }, { label: "B1F" } ] },
+  { name: "Victory Road", entries: [ { label: "1F" }, { label: "2F" }, { label: "3F" } ] },
+  { name: "Underground Path (Route 5-6)", entries: [ { label: "North Entrance" }, { label: "Tunnel" }, { label: "South Entrance" } ] },
+  { name: "Underground Path (Route 7-8)", entries: [ { label: "West Entrance" }, { label: "Tunnel" }, { label: "East Entrance" } ] },
+  { name: "S.S. Anne", entries: [ { label: "Exterior" }, { label: "1F Corridor" }, { label: "2F Corridor" }, { label: "3F Corridor" }, { label: "B1F Corridor" }, { label: "Deck" }, { label: "Kitchen" }, { label: "Captain's Office" }, { label: "1F Room 1" }, { label: "1F Room 2" }, { label: "1F Room 3" }, { label: "1F Room 4" }, { label: "1F Room 5" }, { label: "1F Room 7" }, { label: "2F Room 1" }, { label: "2F Room 2" }, { label: "2F Room 3" }, { label: "2F Room 4" }, { label: "2F Room 5" }, { label: "2F Room 6" }, { label: "B1F Room 1" }, { label: "B1F Room 2" }, { label: "B1F Room 3" }, { label: "B1F Room 4" }, { label: "B1F Room 5" }, { label: "1F Room 6" } ] },
+  { name: "Silph Co.", entries: [ { label: "1F" }, { label: "2F" }, { label: "3F" }, { label: "4F" }, { label: "5F" }, { label: "6F" }, { label: "7F" }, { label: "8F" }, { label: "9F" }, { label: "10F" }, { label: "11F" }, { label: "Elevator" } ] },
+  { name: "Pokemon Tower", entries: [ { label: "1F" }, { label: "2F" }, { label: "3F" }, { label: "4F" }, { label: "5F" }, { label: "6F" }, { label: "7F" } ] },
+  { name: "Safari Zone", entries: [ { label: "Center" }, { label: "East" }, { label: "North" }, { label: "West" }, { label: "Center Rest House" }, { label: "East Rest House" }, { label: "North Rest House" }, { label: "West Rest House" }, { label: "Secret House" } ] },
+  { name: "Game Corner", entries: [  ] },
+  { name: "Team Rocket Hideout", entries: [ { label: "B1F" }, { label: "B2F" }, { label: "B3F" }, { label: "B4F" }, { label: "Elevator" } ] },
+  { name: "Pokemon League", entries: [ { label: "Lorelei's Room" }, { label: "Bruno's Room" }, { label: "Agatha's Room" }, { label: "Lance's Room" }, { label: "Champion's Room" }, { label: "Hall Of Fame" } ] },
+  { name: "Mt. Ember", entries: [ { label: "Ruby Path B4F" }, { label: "Exterior" }, { label: "Summit Path 1F" }, { label: "Summit Path 2F" }, { label: "Summit Path 3F" }, { label: "Summit" }, { label: "Ruby Path B5F" }, { label: "Ruby Path 1F" }, { label: "Ruby Path B1F" }, { label: "Ruby Path B2F" }, { label: "Ruby Path B3F" }, { label: "Ruby Path B1F Stairs" }, { label: "Ruby Path B2F Stairs" } ] },
+  { name: "Kindle Road", entries: [  ] },
+  { name: "Cape Brink", entries: [  ] },
+  { name: "Bond Bridge", entries: [  ] },
+  { name: "Berry Forest", entries: [  ] },
+  { name: "Icefall Cave", entries: [  ] },
+  { name: "Rocket Warehouse", entries: [  ] },
+  { name: "Water Path", entries: [  ] },
+  { name: "Water Labyrinth", entries: [  ] },
+  { name: "Five Isle Meadow", entries: [  ] },
+  { name: "Memorial Pillar", entries: [  ] },
+  { name: "Resort Gorgeous", entries: [  ] },
+  { name: "Green Path", entries: [  ] },
+  { name: "Outcast Island", entries: [  ] },
+  { name: "Tanoby Ruins", entries: [  ] },
+  { name: "Sevault Canyon", entries: [  ] },
+  { name: "Trainer Tower", entries: [ { label: "1F" }, { label: "2F" }, { label: "3F" }, { label: "4F" }, { label: "5F" }, { label: "6F" }, { label: "7F" }, { label: "8F" }, { label: "Roof" }, { label: "Lobby" }, { label: "Elevator" } ] },
+  { name: "Canyon Entrance", entries: [  ] },
+  { name: "Three Isle Port", entries: [  ] },
+  { name: "Navel Rock", entries: [ { label: "Exterior" }, { label: "1F" }, { label: "Summit" }, { label: "Base" }, { label: "Summit Path 2F" }, { label: "Summit Path 3F" }, { label: "Summit Path 4F" }, { label: "Summit Path 5F" }, { label: "Base Path B1F" }, { label: "Base Path B2F" }, { label: "Base Path B3F" }, { label: "Base Path B4F" }, { label: "Base Path B5F" }, { label: "Base Path B6F" }, { label: "Base Path B7F" }, { label: "Base Path B8F" }, { label: "Base Path B9F" }, { label: "Base Path B10F" }, { label: "Base Path B11F" }, { label: "B1F" }, { label: "Fork" }, { label: "Harbor" } ] },
+  { name: "Birth Island", entries: [ { label: "Exterior" }, { label: "Harbor" } ] },
+  { name: "Union Room", entries: [ { label: "Battle Colosseum (2P)" }, { label: "Trade Center" }, { label: "Record Corner" }, { label: "Battle Colosseum (4P)" }, { label: "(Main Area)" } ] },
+  { name: "Unused/Prototype Areas", entries: [ { label: "Prototype Sevii Isle 6" }, { label: "Prototype Sevii Isle 7" }, { label: "Prototype Sevii Isle 8" }, { label: "Prototype Sevii Isle 9" } ] },
+];
+
+const LINEAR_PROGRESSION = [
+  "Pallet Town",
+  "Viridian City",
+  "Pewter City",
+  "Cerulean City",
+  "Vermilion City",
+  "Lavender Town",
+  "Celadon City",
+  "Fuchsia City",
+  "Saffron City",
+  "Cinnabar Island",
+  "Indigo Plateau",
+  "One Island",
+  "Two Island",
+  "Three Island",
+  "Four Island",
+  "Five Island",
+  "Six Island",
+  "Seven Island",
+  "Route 1",
+  "Route 2",
+  "Route 3",
+  "Route 4",
+  "Route 5",
+  "Route 6",
+  "Route 7",
+  "Route 8",
+  "Route 9",
+  "Route 10",
+  "Route 11",
+  "Route 12",
+  "Route 13",
+  "Route 14",
+  "Route 15",
+  "Route 16",
+  "Route 17",
+  "Route 18",
+  "Route 19",
+  "Route 20",
+  "Route 21",
+  "Route 22",
+  "Route 23",
+  "Route 24",
+  "Route 25",
+  "Viridian Forest",
+  "Mt. Moon",
+  "Diglett's Cave",
+  "Rock Tunnel",
+  "Power Plant",
+  "Seafoam Islands",
+  "Pokemon Mansion",
+  "Cerulean Cave",
+  "Victory Road",
+  "Underground Path (Route 5-6)",
+  "Underground Path (Route 7-8)",
+  "S.S. Anne",
+  "Silph Co.",
+  "Pokemon Tower",
+  "Safari Zone",
+  "Game Corner",
+  "Team Rocket Hideout",
+  "Pokemon League",
+  "Mt. Ember",
+  "Kindle Road",
+  "Cape Brink",
+  "Bond Bridge",
+  "Berry Forest",
+  "Icefall Cave",
+  "Rocket Warehouse",
+  "Water Path",
+  "Water Labyrinth",
+  "Five Isle Meadow",
+  "Memorial Pillar",
+  "Resort Gorgeous",
+  "Green Path",
+  "Outcast Island",
+  "Tanoby Ruins",
+  "Sevault Canyon",
+  "Trainer Tower",
+  "Canyon Entrance",
+  "Three Isle Port",
+  "Navel Rock",
+  "Birth Island",
+  "Union Room",
+  "Unused/Prototype Areas",
+];
+function linearRank(name) {
+  const i = LINEAR_PROGRESSION.indexOf(name);
+  return i === -1 ? LINEAR_PROGRESSION.length : i;
+}
+
+let idCounter = 1;
+function genId() { return "id" + (idCounter++) + "-" + Math.random().toString(36).slice(2, 7); }
+
+function buildBlankLocations() {
+  return BLANK_TEMPLATE_SOURCE.map(loc => ({
+    id: genId(),
+    name: loc.name,
+    notes: "",
+    open: !!loc.startingLocation,
+    connector: "",
+    conns: loc.entries.map(e => ({
+      id: genId(),
+      label: e.label,
+      dest: e.dest || "",
+      tag: e.tag || "",
+      connector: e.connector || "",
+      floor: e.floor || "",
+      door: e.door || "",
+      direction: e.direction || "",
+      endFloor: e.endFloor || "",
+      endDoor: e.endDoor || "",
+      endDirection: e.endDirection || "",
+      romSignature: e.romSignature || "",
+      parentId: null,
+      isSection: false,
+      taken: !!e.dest
+    }))
+  }));
+}
+
+function buildEmptyLocations() {
+  return BLANK_TEMPLATE_SOURCE.map(loc => ({
+    id: genId(),
+    name: loc.name,
+    notes: "",
+    open: false,
+    connector: "",
+    conns: loc.entries.map(e => ({
+      id: genId(),
+      label: e.label,
+      dest: "",
+      tag: "",
+      connector: "",
+      floor: "",
+      door: "",
+      direction: "",
+      endFloor: "",
+      endDoor: "",
+      endDirection: "",
+      romSignature: "",
+      parentId: null,
+      isSection: false,
+      taken: false
+    }))
+  }));
+}
+
+const STORAGE_KEY = "frlg-tracker-data";
+let locations = [];
+let editingConns = new Set();
+let editingLocs = new Set();
+let linkSource = null; // { locId, connId } while in link-picking mode
+let dragState = null; // { locId, connId } while dragging a row
+
+function tagPill(tag) {
+  if (!tag) return "";
+  const meta = {
+    boss: { label: "Notable", icon: "\u2B50" },
+    warning: { label: "Warning", icon: "\u26A0" },
+    useless: { label: "Useless", icon: "\u26D4" },
+    unknown: { label: "Unconfirmed", icon: "\u2753" },
+  };
+  const m = meta[tag] || { label: tag, icon: "" };
+  return `<span class="tag ${tag}">${m.icon}${m.label}</span>`;
+}
+
+const ICON_RULES = [
+  [/pok.?e?.?mon?\s*center|pok.?e?\s*center/, "\u2695"],
+  [/mart/, "\uD83D\uDED2"],
+  [/gym/, "\uD83E\uDD4A"],
+  [/game corner/, "\uD83C\uDFB0"],
+  [/daycare/, "\uD83E\uDD5A"],
+  [/museum/, "\uD83C\uDFDB"],
+  [/mansion/, "\uD83C\uDFF0"],
+  [/department store/, "\uD83C\uDFEC"],
+  [/contest/, "\uD83C\uDF80"],
+  [/tower/, "\uD83D\uDDFC"],
+  [/ruins/, "\uD83D\uDDFF"],
+  [/forest/, "\uD83C\uDF32"],
+  [/route/, "\uD83D\uDEE4"],
+  [/lake/, "\uD83C\uDF0A"],
+  [/church/, "\u26EA"],
+  [/fan club/, "\u2B50"],
+  [/mine/, "\u26CF"],
+  [/house/, "\uD83C\uDFE0"],
+  [/\bup\b/, "\u2B06"],
+  [/\bdown\b/, "\u2B07"],
+  [/stairs/, "\uD83D\uDD3C"],
+  [/exit/, "\uD83D\uDEAA"],
+];
+function iconForLabel(label) {
+  const l = (label || "").toLowerCase();
+  for (const [re, icon] of ICON_RULES) if (re.test(l)) return icon;
+  return "\u2022";
+}
+
+function hierarchyBadge(label, direction) {
+  if (direction === "up") return `<span class="hierarchy-badge" title="Leads upstairs within this location">&#9650; Up</span>`;
+  if (direction === "down") return `<span class="hierarchy-badge" title="Leads downstairs within this location">&#9660; Down</span>`;
+  if (direction === "exit") return `<span class="hierarchy-badge" title="Leads out of this location">&#128682; Exit</span>`;
+  if (direction === "entrance") return `<span class="hierarchy-badge" title="Leads into this location">&#8594; Entrance</span>`;
+  const l = (label || "").toLowerCase();
+  if (/\bup\b/.test(l)) return `<span class="hierarchy-badge" title="Leads upstairs within this location">&#9650; Up</span>`;
+  if (/\bdown\b/.test(l)) return `<span class="hierarchy-badge" title="Leads downstairs within this location">&#9660; Down</span>`;
+  if (/stairs/.test(l)) return `<span class="hierarchy-badge" title="Stairs — connects floors within this location">&#8645; Stairs</span>`;
+  return "";
+}
+
+function directionOptions(current) {
+  const opts = [["", "Direction"], ["up", "Up"], ["down", "Down"], ["exit", "Exit"], ["entrance", "Entrance"]];
+  return opts.map(([v, l]) => `<option value="${v}" ${v === current ? "selected" : ""}>${l}</option>`).join("");
+}
+
+function getConnectorCounts() {
+  const counts = {};
+  locations.forEach(loc => {
+    if (loc.connector) counts[loc.connector] = (counts[loc.connector] || 0) + 1;
+    loc.conns.forEach(c => {
+      if (c.connector) counts[c.connector] = (counts[c.connector] || 0) + 1;
+    });
+  });
+  return counts;
+}
+
+function nextConnectorNumber() {
+  const counts = getConnectorCounts();
+  const nums = Object.keys(counts).map(k => parseInt(k, 10)).filter(n => !isNaN(n));
+  const next = nums.length ? Math.max(...nums) + 1 : 1;
+  return String(next);
+}
+
+function normalizeForMatch(s) {
+  return (s || "").toLowerCase().replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const dp = [];
+  for (let i = 0; i <= m; i++) dp.push(new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function textSimilarity(a, b) {
+  const na = normalizeForMatch(a), nb = normalizeForMatch(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 1;
+  const strip = s => s.replace(/\b(town|city)\b/g, "").replace(/\s+/g, " ").trim();
+  const sa = strip(na), sb = strip(nb);
+  if (sa && sa === sb) return 0.97;
+  if (na.includes(nb) || nb.includes(na)) return 0.88;
+  if (sa && sb && (sa.includes(sb) || sb.includes(sa))) return 0.85;
+  const dist = levenshtein(na, nb);
+  const maxLen = Math.max(na.length, nb.length);
+  return maxLen ? 1 - dist / maxLen : 0;
+}
+
+const SMART_LINK_THRESHOLD = 0.72;
+
+function findCompoundCandidates(loc, conn) {
+  if (!conn.dest) return [];
+  const normDest = normalizeForMatch(conn.dest);
+  const results = [];
+  locations.forEach(otherLoc => {
+    if (otherLoc.id === loc.id) return;
+    const normName = normalizeForMatch(otherLoc.name);
+    if (!normName || normName.length < 3) return;
+    const idx = normDest.indexOf(normName);
+    if (idx === -1) return;
+    const remainder = (normDest.slice(0, idx) + " " + normDest.slice(idx + normName.length)).replace(/\s+/g, " ").trim();
+    if (!remainder) return;
+    let bestConn = null, bestScore = 0;
+    otherLoc.conns.forEach(c => {
+      if (otherLoc.id === loc.id && c.id === conn.id) return;
+      const s = textSimilarity(c.label, remainder);
+      if (s > bestScore) { bestScore = s; bestConn = c; }
+    });
+    if (bestConn && bestScore >= SMART_LINK_THRESHOLD) {
+      if (conn.connector && bestConn.connector === conn.connector) return;
+      results.push({ type: "entry", otherLoc, otherConn: bestConn, score: Math.min(1, bestScore * 1.05), compound: true });
+    }
+  });
+  return results;
+}
+
+function findLabelCandidates(loc, conn) {
+  if (!conn.dest) return [];
+  const results = [];
+  locations.forEach(otherLoc => {
+    otherLoc.conns.forEach(otherConn => {
+      if (otherLoc.id === loc.id && otherConn.id === conn.id) return;
+      if (conn.connector && otherConn.connector === conn.connector) return;
+      const labelSim = textSimilarity(otherConn.label, conn.dest);
+      if (labelSim < SMART_LINK_THRESHOLD) return;
+      const backSim = otherConn.dest ? textSimilarity(otherConn.dest, loc.name) : 0;
+      const score = backSim >= SMART_LINK_THRESHOLD
+        ? Math.min(1, (labelSim + backSim) / 2 + 0.05)
+        : labelSim * 0.85;
+      results.push({ type: "entry", otherLoc, otherConn, score });
+    });
+  });
+  return results;
+}
+
+function bestLocationNameSimilarity(text) {
+  let best = 0;
+  locations.forEach(l => {
+    const s = textSimilarity(l.name, text);
+    if (s > best) best = s;
+  });
+  return best;
+}
+
+function fieldNumber(str) {
+  const m = (str || "").match(/\d+/);
+  return m ? m[0] : null;
+}
+
+function extractHintNumbers(text) {
+  const t = (text || "").toLowerCase();
+  const floorMatch = t.match(/(\d+)\s*f\b/) || t.match(/floor\s*(\d+)/) || t.match(/\bb(\d+)\b/);
+  const doorMatch = t.match(/door\s*#?\s*(\d+)/);
+  return {
+    floor: floorMatch ? floorMatch[1] : null,
+    door: doorMatch ? doorMatch[1] : null,
+  };
+}
+
+function floorDoorBonus(connA, candidateConn) {
+  const hints = extractHintNumbers(connA.dest);
+  const aEndFloor = fieldNumber(connA.endFloor) || hints.floor;
+  const aEndDoor = fieldNumber(connA.endDoor) || hints.door;
+  const aEndDirection = connA.endDirection || null;
+  let bonus = 0;
+
+  // What A expects at the destination (its own Ending warp fields) vs the candidate's actual Starting point
+  if (aEndFloor && candidateConn.floor) {
+    bonus += fieldNumber(candidateConn.floor) === aEndFloor ? 0.08 : -0.15;
+  }
+  if (aEndDoor && candidateConn.door) {
+    bonus += fieldNumber(candidateConn.door) === aEndDoor ? 0.08 : -0.15;
+  }
+  if (aEndDirection && candidateConn.direction) {
+    bonus += aEndDirection === candidateConn.direction ? 0.05 : -0.05;
+  }
+
+  // The candidate's own Ending warp fields (its expectation of A) vs A's actual Starting point
+  const bEndFloor = fieldNumber(candidateConn.endFloor);
+  const bEndDoor = fieldNumber(candidateConn.endDoor);
+  if (bEndFloor && connA.floor) {
+    bonus += fieldNumber(connA.floor) === bEndFloor ? 0.08 : -0.15;
+  }
+  if (bEndDoor && connA.door) {
+    bonus += fieldNumber(connA.door) === bEndDoor ? 0.08 : -0.15;
+  }
+  if (candidateConn.endDirection && connA.direction) {
+    bonus += candidateConn.endDirection === connA.direction ? 0.05 : -0.05;
+  }
+
+  return bonus;
+}
+
+function findSmartLinkCandidates(loc, conn) {
+  if (!conn.dest) return [];
+  const results = [];
+  const matchedLocIds = new Set();
+  const matchedPairs = new Set();
+
+  locations.forEach(otherLoc => {
+    const locSim = textSimilarity(otherLoc.name, conn.dest);
+    if (locSim < SMART_LINK_THRESHOLD) return;
+    otherLoc.conns.forEach(otherConn => {
+      if (otherLoc.id === loc.id && otherConn.id === conn.id) return;
+      if (!otherConn.dest) return;
+      if (conn.connector && otherConn.connector === conn.connector) return;
+      const backSim = textSimilarity(otherConn.dest, loc.name);
+      if (backSim < SMART_LINK_THRESHOLD) return;
+      results.push({ type: "entry", otherLoc, otherConn, score: (locSim + backSim) / 2 });
+      matchedLocIds.add(otherLoc.id);
+      matchedPairs.add(otherLoc.id + ":" + otherConn.id);
+    });
+  });
+
+  findCompoundCandidates(loc, conn).forEach(cand => {
+    const key = cand.otherLoc.id + ":" + cand.otherConn.id;
+    if (matchedPairs.has(key)) return;
+    results.push(cand);
+    matchedPairs.add(key);
+    matchedLocIds.add(cand.otherLoc.id);
+  });
+
+  findLabelCandidates(loc, conn).forEach(cand => {
+    const key = cand.otherLoc.id + ":" + cand.otherConn.id;
+    if (matchedPairs.has(key)) return;
+    results.push(cand);
+    matchedPairs.add(key);
+    matchedLocIds.add(cand.otherLoc.id);
+  });
+
+  locations.forEach(otherLoc => {
+    if (otherLoc.id === loc.id || matchedLocIds.has(otherLoc.id)) return;
+    const locSim = textSimilarity(otherLoc.name, conn.dest);
+    if (locSim < SMART_LINK_THRESHOLD) return;
+    if (conn.connector && otherLoc.connector === conn.connector) return;
+    results.push({ type: "location", otherLoc, score: locSim * 0.9 });
+  });
+
+  results.forEach(r => {
+    if (r.type === "entry" && r.otherConn) {
+      r.score = Math.max(0, Math.min(1, r.score + floorDoorBonus(conn, r.otherConn)));
+    }
+  });
+
+  results.sort((a, b) => b.score - a.score);
+  return results;
+}
+
+function fillReciprocalDest(locA, connA, locB, connB) {
+  if (!connA.dest) connA.dest = locB.name;
+  if (connB && !connB.dest) connB.dest = locA.name;
+}
+
+function pushMetadataOneWay(connA, connB) {
+  if (!connB) return;
+  if (connA.endFloor && !connB.floor) connB.floor = connA.endFloor;
+  if (connA.endDoor && !connB.door) connB.door = connA.endDoor;
+  if (connA.endDirection && !connB.direction) connB.direction = connA.endDirection;
+  if (connB.floor && !connA.endFloor) connA.endFloor = connB.floor;
+  if (connB.door && !connA.endDoor) connA.endDoor = connB.door;
+  if (connB.direction && !connA.endDirection) connA.endDirection = connB.direction;
+}
+
+function pushMetadataBothWays(connA, connB) {
+  if (!connB) return;
+  if (connA.endFloor && !connB.floor) connB.floor = connA.endFloor;
+  if (connA.endDoor && !connB.door) connB.door = connA.endDoor;
+  if (connA.endDirection && !connB.direction) connB.direction = connA.endDirection;
+  if (connB.endFloor && !connA.floor) connA.floor = connB.endFloor;
+  if (connB.endDoor && !connA.door) connA.door = connB.endDoor;
+  if (connB.endDirection && !connA.direction) connA.direction = connB.endDirection;
+  if (connB.floor && !connA.endFloor) connA.endFloor = connB.floor;
+  if (connB.door && !connA.endDoor) connA.endDoor = connB.door;
+  if (connB.direction && !connA.endDirection) connA.endDirection = connB.direction;
+  if (connA.floor && !connB.endFloor) connB.endFloor = connA.floor;
+  if (connA.door && !connB.endDoor) connB.endDoor = connA.door;
+  if (connA.direction && !connB.endDirection) connB.endDirection = connA.direction;
+}
+
+function linkTwoWarps(a, b, sourceOnly) {
+  const locA = findLoc(a.locId);
+  const connA = locA && findConn(locA, a.connId);
+  const locB = findLoc(b.locId);
+  const connB = locB && findConn(locB, b.connId);
+  if (!connA || !connB) return false;
+  pushUndo();
+  const value = connA.connector || connB.connector || nextConnectorNumber();
+  connA.connector = value;
+  connB.connector = value;
+  fillReciprocalDest(locA, connA, locB, connB);
+  if (sourceOnly) pushMetadataOneWay(connA, connB);
+  else pushMetadataBothWays(connA, connB);
+  saveState();
+  render();
+  setTimeout(() => {
+    [a, b].forEach(t => {
+      const row = document.querySelector(`.conn[data-loc="${t.locId}"][data-conn="${t.connId}"]`);
+      if (row) row.classList.add("connector-flash");
+    });
+  }, 30);
+  return true;
+}
+
+function linkWarpToLocation(a, locId) {
+  const locA = findLoc(a.locId);
+  const connA = locA && findConn(locA, a.connId);
+  const locB = findLoc(locId);
+  if (!connA || !locB) return false;
+  pushUndo();
+  const value = connA.connector || locB.connector || nextConnectorNumber();
+  connA.connector = value;
+  locB.connector = value;
+  if (!connA.dest) connA.dest = locB.name;
+  saveState();
+  render();
+  setTimeout(() => {
+    const row = document.querySelector(`.conn[data-loc="${a.locId}"][data-conn="${a.connId}"]`);
+    if (row) row.classList.add("connector-flash");
+    const card = document.querySelector(`.card[data-loc="${locId}"]`);
+    if (card) card.classList.add("connector-flash");
+  }, 30);
+  return true;
+}
+
+function titleCase(s) {
+  return (s || "").replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1));
+}
+
+function findClosestLocationForCreate(destText, excludeLocId) {
+  const normDest = normalizeForMatch(destText);
+  let best = null;
+  locations.forEach(l => {
+    if (l.id === excludeLocId) return;
+    const normName = normalizeForMatch(l.name);
+    if (!normName || normName.length < 3) return;
+    const idx = normDest.indexOf(normName);
+    if (idx === -1) return;
+    const remainder = (normDest.slice(0, idx) + " " + normDest.slice(idx + normName.length)).replace(/\s+/g, " ").trim();
+    if (!best || normName.length > best.matchedLen) {
+      best = { loc: l, label: titleCase(remainder), matchedLen: normName.length };
+    }
+  });
+  if (best) return { loc: best.loc, label: best.label };
+
+  let bestLoc = null, bestScore = 0;
+  locations.forEach(l => {
+    if (l.id === excludeLocId) return;
+    const s = textSimilarity(l.name, destText);
+    if (s > bestScore) { bestScore = s; bestLoc = l; }
+  });
+  if (bestLoc && bestScore > 0.3) return { loc: bestLoc, label: "" };
+  return null;
+}
+
+function createWarpInLocation(locId, label, a) {
+  const targetLoc = findLoc(locId);
+  const locA = findLoc(a.locId);
+  const connA = locA && findConn(locA, a.connId);
+  if (!targetLoc || !connA) return false;
+  pushUndo();
+  const value = connA.connector || nextConnectorNumber();
+  const newConn = {
+    id: genId(), label: label || connA.dest || "Unlabeled", dest: locA.name, tag: "",
+    connector: value, floor: connA.endFloor || "", door: connA.endDoor || "", direction: connA.endDirection || "",
+    endFloor: connA.floor || "", endDoor: connA.door || "", endDirection: connA.direction || "",
+    parentId: null, taken: true
+  };
+  connA.connector = value;
+  targetLoc.conns.push(newConn);
+  targetLoc.open = true;
+  saveState();
+  render();
+  setTimeout(() => {
+    const row = document.querySelector(`.conn[data-loc="${a.locId}"][data-conn="${a.connId}"]`);
+    if (row) row.classList.add("connector-flash");
+    const newRow = document.querySelector(`.conn[data-loc="${locId}"][data-conn="${newConn.id}"]`);
+    if (newRow) { newRow.classList.add("connector-flash"); newRow.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  }, 30);
+  return true;
+}
+
+function completeLink(target) {
+  if (!linkSource) return;
+  const source = linkSource;
+  linkSource = null;
+  linkTwoWarps(source, target);
+}
+
+function cancelLink() {
+  linkSource = null;
+  render();
+}
+
+const LOCAL_KEY = "firered-leafgreen-warp-tracker-data-v1";
+
+function localSave() {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(locations)); }
+  catch (e) { console.error("localStorage save failed", e); }
+}
+
+function localLoad() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { console.error("localStorage load failed", e); return null; }
+}
+
+async function loadState() {
+  const local = localLoad();
+  if (local) { locations = local; return; }
+  try {
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if (res && res.value) {
+      locations = JSON.parse(res.value);
+      return;
+    }
+  } catch (e) { /* nothing saved yet */ }
+  locations = buildBlankLocations();
+}
+
+let saveTimer = null;
+let undoStack = [];
+let redoStack = [];
+const MAX_UNDO = 30;
+
+function snapshotState() {
+  return {
+    locations: JSON.parse(JSON.stringify(locations)),
+    ignoredSignatures: [...ignoredSignatures]
+  };
+}
+
+function collectConnMap(locs) {
+  const map = {};
+  locs.forEach(loc => loc.conns.forEach(c => { map[c.id] = JSON.stringify(c); }));
+  return map;
+}
+
+function findChangedConnIds(before, after) {
+  const beforeMap = collectConnMap(before);
+  const afterMap = collectConnMap(after);
+  const changed = new Set();
+  Object.keys(afterMap).forEach(id => { if (afterMap[id] !== beforeMap[id]) changed.add(id); });
+  Object.keys(beforeMap).forEach(id => { if (!(id in afterMap)) changed.add(id); });
+  return changed;
+}
+
+function flashChangedRows(before, after) {
+  const changed = findChangedConnIds(before, after);
+  if (!changed.size) return;
+  setTimeout(() => {
+    let firstEl = null;
+    changed.forEach(id => {
+      const row = document.querySelector(`.conn[data-conn="${id}"]`);
+      if (row) {
+        row.classList.add("connector-flash");
+        if (!firstEl) firstEl = row;
+      }
+    });
+    if (firstEl) firstEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => {
+      changed.forEach(id => {
+        const row = document.querySelector(`.conn[data-conn="${id}"]`);
+        if (row) row.classList.remove("connector-flash");
+      });
+    }, 1700);
+  }, 30);
+}
+
+function openLocationsContaining(connIds) {
+  locations.forEach(loc => {
+    if (loc.conns.some(c => connIds.has(c.id))) loc.open = true;
+  });
+}
+
+function pushUndo() {
+  undoStack.push(snapshotState());
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  redoStack = [];
+  updateUndoRedoButtons();
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  const before = locations;
+  redoStack.push(snapshotState());
+  if (redoStack.length > MAX_UNDO) redoStack.shift();
+  const restored = undoStack.pop();
+  locations = restored.locations;
+  ignoredSignatures = new Set(restored.ignoredSignatures || []);
+  saveIgnoredSignatures();
+  editingConns = new Set();
+  editingLocs = new Set();
+  linkSource = null;
+  const changed = findChangedConnIds(before, locations);
+  openLocationsContaining(changed);
+  saveNow();
+  render();
+  flashChangedRows(before, locations);
+  updateUndoRedoButtons();
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  const before = locations;
+  undoStack.push(snapshotState());
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  const restored = redoStack.pop();
+  locations = restored.locations;
+  ignoredSignatures = new Set(restored.ignoredSignatures || []);
+  saveIgnoredSignatures();
+  editingConns = new Set();
+  editingLocs = new Set();
+  linkSource = null;
+  const changed = findChangedConnIds(before, locations);
+  openLocationsContaining(changed);
+  saveNow();
+  render();
+  flashChangedRows(before, locations);
+  updateUndoRedoButtons();
+}
+
+function updateUndoRedoButtons() {
+  const u = document.getElementById("undoBtn");
+  const r = document.getElementById("redoBtn");
+  if (u) u.disabled = undoStack.length === 0;
+  if (r) r.disabled = redoStack.length === 0;
+}
+
+function saveState() {
+  localSave();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try { await window.storage.set(STORAGE_KEY, JSON.stringify(locations), false); }
+    catch (e) { /* window.storage isn't available outside Claude's artifact preview — localStorage already saved above */ }
+  }, 300);
+}
+
+async function saveNow() {
+  localSave();
+  clearTimeout(saveTimer);
+  const status = document.getElementById("saveStatus");
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(locations), false);
+  } catch (e) { /* localStorage already has it either way */ }
+  if (status) {
+    status.textContent = "Saved";
+    status.classList.add("visible");
+    clearTimeout(saveNow._timeout);
+    saveNow._timeout = setTimeout(() => status.classList.remove("visible"), 1800);
+  }
+}
+
+function findLoc(id) { return locations.find(l => l.id === id); }
+function findConn(loc, id) { return loc.conns.find(c => c.id === id); }
+
+function connDepth(loc, connId) {
+  let depth = 0;
+  let current = findConn(loc, connId);
+  let guard = 0;
+  while (current && current.parentId && guard < 10) {
+    depth++;
+    current = findConn(loc, current.parentId);
+    guard++;
+  }
+  return depth;
+}
+
+function collectDescendantIds(loc, rootId) {
+  const ids = new Set([rootId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    loc.conns.forEach(c => {
+      if (c.parentId && ids.has(c.parentId) && !ids.has(c.id)) {
+        ids.add(c.id);
+        changed = true;
+      }
+    });
+  }
+  return ids;
+}
+
+function orderedConns(loc) {
+  const byParent = {};
+  loc.conns.forEach(c => {
+    const key = c.parentId || "root";
+    if (!byParent[key]) byParent[key] = [];
+    byParent[key].push(c);
+  });
+  const result = [];
+  function walk(parentKey, depth) {
+    (byParent[parentKey] || []).forEach(c => {
+      result.push({ conn: c, depth });
+      walk(c.id, depth + 1);
+    });
+  }
+  walk("root", 0);
+  const seen = new Set(result.map(r => r.conn.id));
+  loc.conns.forEach(c => {
+    if (!seen.has(c.id)) result.push({ conn: c, depth: 0 });
+  });
+  return result;
+}
+
+function siblingPosition(loc, connId) {
+  const conn = findConn(loc, connId);
+  if (!conn) return null;
+  const siblingIds = loc.conns.filter(c => c.parentId === conn.parentId).map(c => c.id);
+  return { index: siblingIds.indexOf(connId), count: siblingIds.length, siblingIds };
+}
+
+function moveConnAmongSiblings(loc, connId, direction) {
+  const pos = siblingPosition(loc, connId);
+  if (!pos) return false;
+  const targetIndex = pos.index + direction;
+  if (targetIndex < 0 || targetIndex >= pos.count) return false;
+  const otherId = pos.siblingIds[targetIndex];
+  const i1 = loc.conns.findIndex(c => c.id === connId);
+  const i2 = loc.conns.findIndex(c => c.id === otherId);
+  const tmp = loc.conns[i1];
+  loc.conns[i1] = loc.conns[i2];
+  loc.conns[i2] = tmp;
+  return true;
+}
+
+function tagOptions(current) {
+  const opts = [
+    ["", "-"], ["boss", "Notable"], ["warning", "Warning"], ["useless", "Useless"], ["unknown", "Unconfirmed"]
+  ];
+  return opts.map(([v, l]) => `<option value="${v}" ${v === current ? "selected" : ""}>${l}</option>`).join("");
+}
+
+function completion(loc) {
+  const real = loc.conns.filter(c => !c.isSection);
+  const total = real.length;
+  const done = real.filter(c => c.taken).length;
+  return { total, done };
+}
+
+function sortLocs(items, sortBy) {
+  if (sortBy === "az") {
+    items.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sortBy === "linear") {
+    items.sort((a, b) => {
+      const ra = linearRank(a.name), rb = linearRank(b.name);
+      if (ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
+    });
+  } else if (sortBy === "incomplete") {
+    items.sort((a, b) => {
+      const ca = completion(a), cb = completion(b);
+      const ra = ca.total ? ca.done / ca.total : 0;
+      const rb = cb.total ? cb.done / cb.total : 0;
+      return ra - rb;
+    });
+  }
+  return items;
+}
+
+function render() {
+  const main = document.getElementById("main");
+  const search = document.getElementById("search").value.trim().toLowerCase();
+  const filterTag = document.getElementById("filterTag").value;
+  const sortBy = document.getElementById("sortBy").value;
+
+  let items = locations.slice();
+
+  if (search) {
+    items = items.filter(loc =>
+      loc.name.toLowerCase().includes(search) ||
+      loc.conns.some(c => (c.label || "").toLowerCase().includes(search) || (c.dest || "").toLowerCase().includes(search) || (c.connector || "").toLowerCase().includes(search) || (c.floor || "").toLowerCase().includes(search) || (c.door || "").toLowerCase().includes(search) || (c.direction || "").toLowerCase().includes(search))
+    );
+  }
+  if (filterTag !== "all") {
+    items = items.filter(loc => loc.conns.some(c => c.tag === filterTag));
+  }
+
+  sortLocs(items, sortBy);
+
+  document.getElementById("emptyMsg").style.display = items.length ? "none" : "block";
+
+  main.innerHTML = items.map(loc => {
+    const { total, done } = completion(loc);
+    const fullyCleared = total > 0 && done === total;
+    const counts = getConnectorCounts();
+
+    function rowHtml(c, depth) {
+      if (c.isSection) {
+        const isEditingSection = editingConns.has(c.id);
+        const nameBit = isEditingSection
+          ? `<input type="text" class="f-section-name" placeholder="Section name" value="${(c.label || "").replace(/"/g, "&quot;")}">`
+          : `<button class="section-name-trigger" title="Click to rename"><span class="section-name">${(c.label || "Section").replace(/</g, "&lt;")}</span></button>`;
+        const pos = siblingPosition(loc, c.id);
+        return `
+        <div class="conn section-row" data-loc="${loc.id}" data-conn="${c.id}" data-connector="" data-depth="${depth}" draggable="true">
+          <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
+          <div class="move-controls">
+            <button class="icon-btn move-up" ${pos.index > 0 ? "" : "disabled"} title="Move up">&#9650;</button>
+            <button class="icon-btn move-down" ${pos.index < pos.count - 1 ? "" : "disabled"} title="Move down">&#9660;</button>
+          </div>
+          <span class="section-icon">&#128193;</span>
+          ${nameBit}
+          <div class="conn-actions">
+            ${depth < 2 ? `<button class="icon-btn add-subwarp" title="Add a warp nested under this section">&#8618;+</button>` : ""}
+            ${c.parentId ? `<button class="icon-btn add-sibling" title="Add another section at this same level">&#8644;+</button>` : ""}
+            ${isEditingSection ? `<button class="icon-btn edit-conn" title="Done">&#10003;</button>` : ""}
+            <button class="icon-btn del-conn" title="Delete section (and anything nested under it)">&times;</button>
+          </div>
+        </div>`;
+      }
+      const isEditing = editingConns.has(c.id);
+      const isBridge = c.connector && counts[c.connector] >= 2;
+      const body = isEditing ? `
+        <div class="conn-fields">
+          <div class="cf-row">
+            <input type="text" class="f-label" placeholder="entry point" value="${(c.label || "").replace(/"/g, "&quot;")}">
+            <span class="arrow">-></span>
+            <input type="text" class="f-dest" placeholder="destination once found..." value="${(c.dest || "").replace(/"/g, "&quot;")}">
+            <div class="cf-end-actions">
+              <button class="icon-btn convert-section" title="Convert this warp into a plain organizational section">&#128193;</button>
+              <button class="icon-btn del-conn" title="Delete warp (and any sub-warps under it)">&times;</button>
+              <button class="icon-btn edit-conn" title="Done">&#10003;</button>
+            </div>
+          </div>
+          <div class="cf-block">
+            <div class="cf-tag-label">Starting point</div>
+            <div class="cf-fields-row">
+              <input type="text" class="f-floor" placeholder="floor" title="Floor number (optional)" value="${(c.floor || "").replace(/"/g, "&quot;")}">
+              <input type="text" class="f-door" placeholder="door #" title="Door number (optional)" value="${(c.door || "").replace(/"/g, "&quot;")}">
+              <select class="direction-select" title="Up/Down/Exit (optional)">${directionOptions(c.direction)}</select>
+            </div>
+          </div>
+          <div class="cf-block cf-other-end">
+            <div class="cf-tag-label">Ending warp</div>
+            <div class="cf-fields-row">
+              <input type="text" class="f-end-floor" placeholder="floor" title="Floor number at the destination (optional)" value="${(c.endFloor || "").replace(/"/g, "&quot;")}">
+              <input type="text" class="f-end-door" placeholder="door #" title="Door number at the destination (optional)" value="${(c.endDoor || "").replace(/"/g, "&quot;")}">
+              <select class="end-direction-select" title="Up/Down/Exit at the destination (optional)">${directionOptions(c.endDirection)}</select>
+              <select class="tag-select">${tagOptions(c.tag)}</select>
+            </div>
+          </div>
+        </div>` : `
+        <button class="conn-view cv-edit-trigger" title="Click to edit this warp's starting point">
+          <div class="cv-main">
+            ${depth > 0 ? `<span class="nest-marker">&#8618;</span>` : ""}
+            <span class="v-icon">${iconForLabel(c.label)}</span>
+            <span class="v-label">${(c.label || "(unlabeled)").replace(/</g, "&lt;")}</span>
+            <span class="arrow">-></span>
+            <span class="v-dest ${c.dest ? "" : "empty"}">${c.dest ? c.dest.replace(/</g, "&lt;") : "not logged yet"}</span>
+          </div>
+          <div class="cv-meta">
+            ${hierarchyBadge(c.label, c.direction)}
+            ${c.floor ? `<span class="floor-badge" title="Floor">Fl. ${c.floor.replace(/</g, "&lt;")}</span>` : ""}
+            ${c.door ? `<span class="door-badge" title="Door number">Dr. ${c.door.replace(/</g, "&lt;")}</span>` : ""}
+            ${c.connector ? `<span class="connector-badge ${isBridge ? "bridge" : "pending"}" data-jump="${c.connector.replace(/"/g, "&quot;")}" title="${isBridge ? "Bridge confirmed — jump to the other end" : "Waiting for a matching warp"}">${isBridge ? "&#128279;" : "&#8853;"} ${c.connector}</span><span class="badge-del" data-loc="${loc.id}" data-conn="${c.id}" title="Remove this connector from just this warp">&times;</span>` : ""}
+            ${tagPill(c.tag)}
+          </div>
+        </button>
+        ${(c.endFloor || c.endDoor || c.endDirection) ? `
+        <button class="conn-view cv-meta cv-other-end cv-edit-trigger" title="Click to edit the ending warp details">
+          <span class="cf-tag-label">Ending warp</span>
+          ${c.endDirection === "up" ? `<span class="hierarchy-badge">&#9650; Up</span>` : ""}
+          ${c.endDirection === "down" ? `<span class="hierarchy-badge">&#9660; Down</span>` : ""}
+          ${c.endDirection === "exit" ? `<span class="hierarchy-badge">&#128682; Exit</span>` : ""}
+          ${c.endDirection === "entrance" ? `<span class="hierarchy-badge">&#8594; Entrance</span>` : ""}
+          ${c.endFloor ? `<span class="floor-badge" title="Floor at the destination">Fl. ${c.endFloor.replace(/</g, "&lt;")}</span>` : ""}
+          ${c.endDoor ? `<span class="door-badge" title="Door number at the destination">Dr. ${c.endDoor.replace(/</g, "&lt;")}</span>` : ""}
+        </button>` : ""}`;
+      const isLinkSource = linkSource && linkSource.locId === loc.id && linkSource.connId === c.id;
+      const pos = siblingPosition(loc, c.id);
+      return `
+      <div class="conn ${c.taken ? "taken" : ""}" data-loc="${loc.id}" data-conn="${c.id}" data-connector="${c.connector || ""}" data-depth="${depth}" draggable="true">
+        <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
+        <div class="move-controls">
+          <button class="icon-btn move-up" ${pos.index > 0 ? "" : "disabled"} title="Move up">&#9650;</button>
+          <button class="icon-btn move-down" ${pos.index < pos.count - 1 ? "" : "disabled"} title="Move down">&#9660;</button>
+        </div>
+        <input type="checkbox" class="conn-taken" ${c.taken ? "checked" : ""}>
+        ${body}
+        <div class="conn-actions">
+          ${depth < 2 ? `<button class="icon-btn add-subwarp" title="Add a sub-warp nested under this one">&#8618;+</button>` : ""}
+          ${c.parentId ? `<button class="icon-btn add-sibling" title="Add another sub-warp at this same level">&#8644;+</button>` : ""}
+          ${c.dest ? `<button class="icon-btn smart-link" title="Smart Link — search for the matching warp automatically">&#10024;</button>` : ""}
+          <button class="icon-btn link-conn ${isLinkSource ? "active" : ""}" title="${isLinkSource ? "Cancel link" : "Link this warp to another"}">&#128279;</button>
+          <button class="icon-btn capture-signature ${c.romSignature ? "has-signature" : ""} ${currentLiveMatchId === c.id ? "is-live-match" : ""}" title="${currentLiveMatchId === c.id ? "You are here right now" : c.romSignature ? "Signature captured — click to re-capture from your current in-game position" : "Capture your current in-game position as this warp's signature"}">&#128225;</button>
+          ${isEditing ? "" : `<button class="icon-btn del-conn" title="Delete warp (and any sub-warps under it)">&times;</button>`}
+        </div>
+      </div>`;
+    }
+
+    const connsHtml = orderedConns(loc).map(({ conn, depth }) => rowHtml(conn, depth)).join("");
+
+    const editingName = editingLocs.has(loc.id);
+    const nameHtml = editingName
+      ? `<input type="text" class="loc-name-input" value="${loc.name.replace(/"/g, "&quot;")}">`
+      : `<div class="loc-name-display">${loc.name.replace(/</g, "&lt;")}</div>`;
+
+    const isLocBridge = loc.connector && counts[loc.connector] >= 2;
+    const canLinkHere = linkSource && linkSource.locId !== loc.id;
+    const isOpen = search ? true : loc.open;
+    const hasNotes = !!(loc.notes && loc.notes.trim());
+
+    return `
+      <div class="card ${isOpen ? "open" : ""} ${fullyCleared ? "fully-cleared" : ""}" data-loc="${loc.id}" data-connector="${loc.connector || ""}">
+        <div class="card-head">
+          <div class="card-head-left toggle-open">
+            <div class="chev">&#9654;</div>
+            ${hasNotes ? `<span class="notes-dot" title="This location has notes">&#128221;</span>` : ""}
+            <div style="flex:1;">
+              ${nameHtml}
+              <div class="loc-meta">${done} / ${total} warps logged
+                ${loc.connector ? `<span class="connector-badge ${isLocBridge ? "bridge" : "pending"}" data-jump="${loc.connector.replace(/"/g, "&quot;")}" title="${isLocBridge ? "Bridge confirmed — jump to the other end" : "Waiting for a matching warp"}">${isLocBridge ? "&#128279;" : "&#8853;"} ${loc.connector}</span><button class="badge-del" data-loc="${loc.id}" data-conn="" title="Remove this connector from this location">&times;</button>` : ""}
+              </div>
+            </div>
+          </div>
+          <div class="head-actions">
+            ${canLinkHere ? `<button class="icon-btn link-loc-target" title="Complete the in-progress link against this whole location">&#128279;</button>` : ""}
+            <button class="icon-btn edit-loc" title="${editingName ? "Done" : "Rename"}">${editingName ? "&#10003;" : "&#9998;"}</button>
+            <button class="icon-btn del-loc" title="Delete location">&times;</button>
+          </div>
+        </div>
+        <div class="card-body">
+          ${connsHtml}
+          <div class="add-row">
+            <button class="ghost add-conn">+ Add warp</button>
+            <button class="ghost add-section">+ Add section</button>
+            ${total > 0 ? `<button class="ghost mark-all-taken" title="${done === total ? "Clear every warp here as not yet logged" : "Mark every warp here as logged"}">${done === total ? "&#10003; Clear all" : "&#10003; Mark all logged"}</button>` : ""}
+          </div>
+          <div class="notes-row">
+            <label>Notes</label>
+            <textarea class="loc-notes" placeholder="What's actually behind these warps...">${loc.notes || ""}</textarea>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  updateProgress();
+  renderConnectorIndex();
+  renderLinkBanner();
+  renderToc();
+  document.querySelectorAll(".loc-notes").forEach(ta => {
+    ta.style.height = "auto";
+    ta.style.height = ta.scrollHeight + "px";
+  });
+}
+
+function renderToc() {
+  const list = document.getElementById("tocList");
+  const sortBy = document.getElementById("sortBy").value;
+  const items = sortLocs(locations.slice(), sortBy);
+  list.innerHTML = items.map(loc => {
+    const { total, done } = completion(loc);
+    const cleared = total > 0 && done === total;
+    return `<li class="toc-item ${cleared ? "t-cleared" : ""}" data-loc="${loc.id}">
+      <span class="t-name">${loc.name.replace(/</g, "&lt;")}</span>
+      <span class="t-count">${done}/${total}</span>
+    </li>`;
+  }).join("");
+}
+
+function jumpToLocation(locId) {
+  const loc = findLoc(locId);
+  if (!loc) return;
+  loc.open = true;
+  document.getElementById("search").value = "";
+  saveState();
+  render();
+  toggleToc(false);
+  setTimeout(() => {
+    const card = document.querySelector(`.card[data-loc="${locId}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+      card.classList.add("connector-flash");
+      setTimeout(() => card.classList.remove("connector-flash"), 1700);
+    }
+  }, 30);
+}
+
+let connectorIndexExpanded = false;
+
+function connectorLocationNames(value) {
+  const names = new Set();
+  locations.forEach(loc => {
+    if (loc.connector === value) names.add(loc.name);
+    loc.conns.forEach(c => { if (c.connector === value) names.add(loc.name); });
+  });
+  return [...names];
+}
+
+function connectorChipHtml(k, bridged) {
+  const names = connectorLocationNames(k);
+  const nameText = bridged
+    ? names.slice(0, 3).join(" \u2194 ") + (names.length > 3 ? " \u2026" : "")
+    : (names[0] || "");
+  return `<span class="connector-chip-wrap">
+    <button class="connector-chip ${bridged ? "bridge" : "pending"}" data-jump="${k}" title="${bridged ? "Bridge confirmed" : "Only one end logged so far"}">
+      ${bridged ? "&#128279;" : "&#8853;"} ${k}${nameText ? ` &middot; ${nameText.replace(/</g, "&lt;")}` : ""}
+    </button>
+    <button class="chip-del" data-delval="${k}" title="Delete this connector everywhere">&times;</button>
+  </span>`;
+}
+
+function renderConnectorIndex() {
+  const el = document.getElementById("connectorIndex");
+  const counts = getConnectorCounts();
+  const keys = Object.keys(counts).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  if (!keys.length) { el.innerHTML = ""; return; }
+
+  const bridgedKeys = keys.filter(k => counts[k] >= 2);
+  const pendingKeys = keys.filter(k => counts[k] < 2);
+
+  el.innerHTML = `
+    <button class="idx-toggle" id="connectorIndexToggle">
+      <span class="idx-chev">${connectorIndexExpanded ? "&#9660;" : "&#9654;"}</span>
+      Connectors &middot; ${bridgedKeys.length} bridged, ${pendingKeys.length} pending
+    </button>
+    <div class="idx-body" style="display:${connectorIndexExpanded ? "flex" : "none"}">
+      ${bridgedKeys.length ? `
+      <div class="idx-group">
+        <div class="idx-group-label bridge">&#128279; Bridged</div>
+        <div class="idx-chip-row">${bridgedKeys.map(k => connectorChipHtml(k, true)).join("")}</div>
+      </div>` : ""}
+      ${pendingKeys.length ? `
+      <div class="idx-group">
+        <div class="idx-group-label pending">&#8853; Pending</div>
+        <div class="idx-chip-row">${pendingKeys.map(k => connectorChipHtml(k, false)).join("")}</div>
+      </div>` : ""}
+    </div>`;
+}
+
+function renderLinkBanner() {
+  const banner = document.getElementById("linkBanner");
+  if (linkSource) {
+    const loc = findLoc(linkSource.locId);
+    const conn = loc && findConn(loc, linkSource.connId);
+    document.getElementById("linkBannerText").textContent =
+      `Linking "${(conn && conn.label) || "this warp"}" — click the link icon on the matching warp, or cancel.`;
+    banner.classList.add("visible");
+  } else {
+    banner.classList.remove("visible");
+  }
+}
+
+function jumpToConnector(value, excludeLocId, excludeConnId) {
+  locations.forEach(loc => {
+    const hasMatch = loc.connector === value || loc.conns.some(c => c.connector === value);
+    if (hasMatch) loc.open = true;
+  });
+  render();
+  setTimeout(() => {
+    const rows = Array.from(document.querySelectorAll(`.conn[data-connector="${CSS.escape(value)}"]`));
+    const cards = Array.from(document.querySelectorAll(`.card[data-connector="${CSS.escape(value)}"]`));
+    rows.forEach(r => r.classList.add("connector-flash"));
+    cards.forEach(c => c.classList.add("connector-flash"));
+    const targets = [
+      ...rows.map(r => ({ el: r, locId: r.dataset.loc, connId: r.dataset.conn })),
+      ...cards.map(c => ({ el: c, locId: c.dataset.loc, connId: "" })),
+    ];
+    const excludeConn = excludeConnId || "";
+    const other = targets.find(t => !(t.locId === excludeLocId && t.connId === excludeConn)) || targets[0];
+    if (other) {
+      other.el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => {
+        rows.forEach(r => r.classList.remove("connector-flash"));
+        cards.forEach(c => c.classList.remove("connector-flash"));
+      }, 1700);
+    }
+  }, 30);
+}
+
+function updateProgress() {
+  let total = 0, done = 0;
+  locations.forEach(loc => loc.conns.forEach(c => { total++; if (c.taken) done++; }));
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent = `${done} / ${total} warps logged (${pct}%)`;
+}
+
+function updateCardMeta(locId) {
+  const loc = findLoc(locId);
+  if (!loc) return;
+  const card = document.querySelector(`.card[data-loc="${locId}"]`);
+  if (!card) return;
+  const total = loc.conns.length;
+  const done = loc.conns.filter(c => c.taken).length;
+  card.querySelector(".loc-meta").textContent = `${done} / ${total} warps logged`;
+  card.classList.toggle("fully-cleared", total > 0 && done === total);
+  updateProgress();
+}
+
+const mainEl = document.getElementById("main");
+
+document.getElementById("linkCancel").addEventListener("click", cancelLink);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && linkSource) cancelLink();
+});
+
+document.getElementById("connectorIndex").addEventListener("click", (e) => {
+  const toggle = e.target.closest("#connectorIndexToggle");
+  if (toggle) {
+    connectorIndexExpanded = !connectorIndexExpanded;
+    renderConnectorIndex();
+    return;
+  }
+  const del = e.target.closest(".chip-del");
+  if (del) {
+    if (!del.classList.contains("confirming")) {
+      del.classList.add("confirming");
+      del.textContent = "sure?";
+      del._timeout = setTimeout(() => {
+        del.classList.remove("confirming");
+        del.innerHTML = "&times;";
+      }, 3000);
+      return;
+    }
+    clearTimeout(del._timeout);
+    const val = del.dataset.delval;
+    pushUndo();
+    locations.forEach(loc => loc.conns.forEach(c => { if (c.connector === val) c.connector = ""; }));
+    saveState(); render();
+    return;
+  }
+  const chip = e.target.closest(".connector-chip");
+  if (chip) jumpToConnector(chip.dataset.jump);
+});
+
+mainEl.addEventListener("click", (e) => {
+  const badgeDel = e.target.closest(".badge-del");
+  if (badgeDel) {
+    e.stopPropagation();
+    const loc = findLoc(badgeDel.dataset.loc);
+    if (badgeDel.dataset.conn) {
+      const conn = findConn(loc, badgeDel.dataset.conn);
+      if (conn) { pushUndo(); conn.connector = ""; }
+    } else if (loc) {
+      pushUndo();
+      loc.connector = "";
+    }
+    saveState(); render();
+    return;
+  }
+
+  const jumpBadge = e.target.closest(".connector-badge");
+  if (jumpBadge) {
+    e.stopPropagation();
+    const row = jumpBadge.closest(".conn");
+    if (row) {
+      jumpToConnector(jumpBadge.dataset.jump, row.dataset.loc, row.dataset.conn);
+    } else {
+      const card = jumpBadge.closest(".card");
+      jumpToConnector(jumpBadge.dataset.jump, card ? card.dataset.loc : null, "");
+    }
+    return;
+  }
+
+  const smartLinkBtn = e.target.closest(".smart-link");
+  if (smartLinkBtn) {
+    e.stopPropagation();
+    const row = smartLinkBtn.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    runSmartLink(loc, conn);
+    return;
+  }
+
+  const captureBtn = e.target.closest(".capture-signature");
+  if (captureBtn) {
+    e.stopPropagation();
+    const row = captureBtn.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    captureSignatureFor(loc, conn);
+    return;
+  }
+
+  const sectionNameTrigger = e.target.closest(".section-name-trigger");
+  if (sectionNameTrigger) {
+    e.stopPropagation();
+    const row = sectionNameTrigger.closest(".conn");
+    editingConns.add(row.dataset.conn);
+    render();
+    setTimeout(() => {
+      const input = document.querySelector(`.conn[data-conn="${row.dataset.conn}"] .f-section-name`);
+      if (input) { input.focus(); input.select(); }
+    }, 0);
+    return;
+  }
+
+  const cvEditTrigger = e.target.closest(".cv-edit-trigger");
+  if (cvEditTrigger) {
+    e.stopPropagation();
+    const row = cvEditTrigger.closest(".conn");
+    editingConns.add(row.dataset.conn);
+    render();
+    setTimeout(() => {
+      const input = document.querySelector(`.conn[data-conn="${row.dataset.conn}"] .f-label`);
+      if (input) input.focus();
+    }, 0);
+    return;
+  }
+
+  const convertSection = e.target.closest(".convert-section");
+  if (convertSection) {
+    e.stopPropagation();
+    const row = convertSection.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    pushUndo();
+    conn.isSection = true;
+    conn.dest = ""; conn.tag = ""; conn.connector = "";
+    conn.floor = ""; conn.door = ""; conn.direction = "";
+    conn.endFloor = ""; conn.endDoor = ""; conn.endDirection = "";
+    conn.taken = false;
+    editingConns.add(conn.id);
+    saveState(); render();
+    setTimeout(() => {
+      const input = document.querySelector(`.conn[data-conn="${conn.id}"] .f-section-name`);
+      if (input) { input.focus(); input.select(); }
+    }, 0);
+    return;
+  }
+
+  const linkLocTarget = e.target.closest(".link-loc-target");
+  if (linkLocTarget) {
+    e.stopPropagation();
+    const card = linkLocTarget.closest(".card");
+    if (linkSource) {
+      linkWarpToLocation(linkSource, card.dataset.loc);
+      linkSource = null;
+    }
+    return;
+  }
+
+  const linkBtn = e.target.closest(".link-conn");
+  if (linkBtn) {
+    e.stopPropagation();
+    const row = linkBtn.closest(".conn");
+    const clicked = { locId: row.dataset.loc, connId: row.dataset.conn };
+    if (!linkSource) {
+      linkSource = clicked;
+      render();
+    } else if (linkSource.locId === clicked.locId && linkSource.connId === clicked.connId) {
+      cancelLink();
+    } else {
+      completeLink(clicked);
+    }
+    return;
+  }
+
+  const toggleHead = e.target.closest(".toggle-open");
+  const delConn = e.target.closest(".del-conn");
+  const delLoc = e.target.closest(".del-loc");
+  const addConn = e.target.closest(".add-conn");
+  const editConn = e.target.closest(".edit-conn");
+  const editLoc = e.target.closest(".edit-loc");
+  const nameInput = e.target.closest(".loc-name-input");
+
+  if (editConn) {
+    e.stopPropagation();
+    const row = editConn.closest(".conn");
+    if (editingConns.has(row.dataset.conn)) editingConns.delete(row.dataset.conn);
+    else editingConns.add(row.dataset.conn);
+    render();
+    return;
+  }
+  if (editLoc) {
+    e.stopPropagation();
+    const card = editLoc.closest(".card");
+    if (editingLocs.has(card.dataset.loc)) editingLocs.delete(card.dataset.loc);
+    else editingLocs.add(card.dataset.loc);
+    render();
+    if (editingLocs.has(card.dataset.loc)) {
+      setTimeout(() => {
+        const input = document.querySelector(`.card[data-loc="${card.dataset.loc}"] .loc-name-input`);
+        if (input) { input.focus(); input.select(); }
+      }, 0);
+    }
+    return;
+  }
+  if (nameInput) { e.stopPropagation(); return; }
+  const moveUp = e.target.closest(".move-up");
+  if (moveUp && !moveUp.disabled) {
+    e.stopPropagation();
+    const row = moveUp.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    pushUndo();
+    moveConnAmongSiblings(loc, row.dataset.conn, -1);
+    saveState(); render();
+    return;
+  }
+  const moveDown = e.target.closest(".move-down");
+  if (moveDown && !moveDown.disabled) {
+    e.stopPropagation();
+    const row = moveDown.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    pushUndo();
+    moveConnAmongSiblings(loc, row.dataset.conn, 1);
+    saveState(); render();
+    return;
+  }
+  const addSubwarp = e.target.closest(".add-subwarp");
+  if (addSubwarp) {
+    e.stopPropagation();
+    const row = addSubwarp.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    pushUndo();
+    const newConn = { id: genId(), label: "", dest: "", tag: "", connector: "", floor: "", door: "", direction: "", endFloor: "", endDoor: "", endDirection: "", romSignature: "", parentId: row.dataset.conn, isSection: false, taken: false };
+    loc.conns.push(newConn);
+    editingConns.add(newConn.id);
+    loc.open = true;
+    saveState(); render();
+    setTimeout(() => {
+      const input = document.querySelector(`.conn[data-conn="${newConn.id}"] .f-label`);
+      if (input) input.focus();
+    }, 0);
+    return;
+  }
+  const addSibling = e.target.closest(".add-sibling");
+  if (addSibling) {
+    e.stopPropagation();
+    const row = addSibling.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const siblingConn = findConn(loc, row.dataset.conn);
+    pushUndo();
+    const newConn = { id: genId(), label: "", dest: "", tag: "", connector: "", floor: "", door: "", direction: "", endFloor: "", endDoor: "", endDirection: "", romSignature: "", parentId: siblingConn.parentId, isSection: false, taken: false };
+    loc.conns.push(newConn);
+    editingConns.add(newConn.id);
+    loc.open = true;
+    saveState(); render();
+    setTimeout(() => {
+      const input = document.querySelector(`.conn[data-conn="${newConn.id}"] .f-label`);
+      if (input) input.focus();
+    }, 0);
+    return;
+  }
+  if (delConn) {
+    const row = delConn.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    pushUndo();
+    const toRemove = collectDescendantIds(loc, row.dataset.conn);
+    loc.conns = loc.conns.filter(c => !toRemove.has(c.id));
+    toRemove.forEach(id => editingConns.delete(id));
+    saveState(); render();
+    return;
+  }
+  if (delLoc) {
+    if (!delLoc.classList.contains("confirming")) {
+      delLoc.classList.add("confirming");
+      delLoc.textContent = "confirm?";
+      delLoc._timeout = setTimeout(() => {
+        delLoc.classList.remove("confirming");
+        delLoc.innerHTML = "&times;";
+      }, 3000);
+      return;
+    }
+    clearTimeout(delLoc._timeout);
+    const card = delLoc.closest(".card");
+    pushUndo();
+    locations = locations.filter(l => l.id !== card.dataset.loc);
+    editingLocs.delete(card.dataset.loc);
+    saveState(); render();
+    return;
+  }
+  if (addConn) {
+    const card = addConn.closest(".card");
+    const loc = findLoc(card.dataset.loc);
+    pushUndo();
+    const newConn = { id: genId(), label: "", dest: "", tag: "", connector: "", floor: "", door: "", direction: "", endFloor: "", endDoor: "", endDirection: "", romSignature: "", parentId: null, isSection: false, taken: false };
+    loc.conns.push(newConn);
+    editingConns.add(newConn.id);
+    loc.open = true;
+    saveState(); render();
+    setTimeout(() => {
+      const rows = document.querySelectorAll(`.card[data-loc="${loc.id}"] .conn`);
+      if (rows.length) rows[rows.length - 1].querySelector(".f-label").focus();
+    }, 0);
+    return;
+  }
+  const addSection = e.target.closest(".add-section");
+  if (addSection) {
+    const card = addSection.closest(".card");
+    const loc = findLoc(card.dataset.loc);
+    pushUndo();
+    const newSection = {
+      id: genId(), label: "New Section", dest: "", tag: "", connector: "",
+      floor: "", door: "", direction: "", endFloor: "", endDoor: "", endDirection: "",
+      parentId: null, isSection: true, taken: false
+    };
+    loc.conns.push(newSection);
+    editingConns.add(newSection.id);
+    loc.open = true;
+    saveState(); render();
+    setTimeout(() => {
+      const input = document.querySelector(`.conn[data-conn="${newSection.id}"] .f-section-name`);
+      if (input) { input.focus(); input.select(); }
+    }, 0);
+    return;
+  }
+  const markAllTaken = e.target.closest(".mark-all-taken");
+  if (markAllTaken) {
+    const card = markAllTaken.closest(".card");
+    const loc = findLoc(card.dataset.loc);
+    const real = loc.conns.filter(c => !c.isSection);
+    const allTaken = real.length > 0 && real.every(c => c.taken);
+    pushUndo();
+    real.forEach(c => { c.taken = !allTaken; });
+    saveState(); render();
+    return;
+  }
+  if (toggleHead) {
+    const card = toggleHead.closest(".card");
+    const loc = findLoc(card.dataset.loc);
+    loc.open = !loc.open;
+    saveState();
+    card.classList.toggle("open");
+    return;
+  }
+});
+
+mainEl.addEventListener("change", (e) => {
+  if (e.target.classList.contains("conn-taken")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    pushUndo();
+    conn.taken = e.target.checked;
+    row.classList.toggle("taken", conn.taken);
+    saveState();
+    updateCardMeta(loc.id);
+  }
+  if (e.target.classList.contains("tag-select")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    pushUndo();
+    conn.tag = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("direction-select")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    pushUndo();
+    conn.direction = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("end-direction-select")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    pushUndo();
+    conn.endDirection = e.target.value;
+    saveState();
+  }
+});
+
+mainEl.addEventListener("focusin", (e) => {
+  const t = e.target;
+  if (t.matches(".f-label, .f-dest, .f-floor, .f-door, .f-end-floor, .f-end-door, .f-section-name, .loc-name-input, .loc-notes") && !t.dataset.undoArmed) {
+    pushUndo();
+    t.dataset.undoArmed = "1";
+  }
+});
+mainEl.addEventListener("focusout", (e) => {
+  const t = e.target;
+  if (t.matches(".f-label, .f-dest, .f-floor, .f-door, .f-end-floor, .f-end-door, .f-section-name, .loc-name-input, .loc-notes")) {
+    delete t.dataset.undoArmed;
+  }
+});
+
+mainEl.addEventListener("dragstart", (e) => {
+  const row = e.target.closest(".conn");
+  if (!row) { e.preventDefault(); return; }
+  dragState = { locId: row.dataset.loc, connId: row.dataset.conn };
+  row.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+  try { e.dataTransfer.setData("text/plain", row.dataset.conn); } catch (err) { /* ignore */ }
+});
+
+mainEl.addEventListener("dragend", (e) => {
+  const row = e.target.closest(".conn");
+  if (row) row.classList.remove("dragging");
+  mainEl.querySelectorAll(".drag-over-top, .drag-over-bottom").forEach(r => {
+    r.classList.remove("drag-over-top", "drag-over-bottom");
+  });
+  mainEl.querySelectorAll(".drag-over-body").forEach(b => b.classList.remove("drag-over-body"));
+  dragState = null;
+});
+
+mainEl.addEventListener("dragover", (e) => {
+  if (!dragState) return;
+  const row = e.target.closest(".conn");
+  if (row && row.dataset.conn !== dragState.connId) {
+    e.preventDefault();
+    const rect = row.getBoundingClientRect();
+    const before = (e.clientY - rect.top) < rect.height / 2;
+    mainEl.querySelectorAll(".drag-over-top, .drag-over-bottom").forEach(r => {
+      if (r !== row) r.classList.remove("drag-over-top", "drag-over-bottom");
+    });
+    row.classList.toggle("drag-over-top", before);
+    row.classList.toggle("drag-over-bottom", !before);
+    return;
+  }
+  const body = e.target.closest(".card-body");
+  if (body) {
+    e.preventDefault();
+    mainEl.querySelectorAll(".drag-over-top, .drag-over-bottom").forEach(r => {
+      r.classList.remove("drag-over-top", "drag-over-bottom");
+    });
+    body.classList.add("drag-over-body");
+  }
+});
+
+mainEl.addEventListener("drop", (e) => {
+  if (!dragState) return;
+  const row = e.target.closest(".conn");
+  if (row && row.dataset.conn !== dragState.connId) {
+    e.preventDefault();
+    const before = row.classList.contains("drag-over-top");
+    row.classList.remove("drag-over-top", "drag-over-bottom");
+    const targetLocId = row.dataset.loc, targetConnId = row.dataset.conn;
+    const loc = findLoc(dragState.locId);
+    if (!loc || loc.id !== targetLocId) { dragState = null; return; }
+    const draggedId = dragState.connId;
+    const descendantIds = collectDescendantIds(loc, draggedId);
+    if (descendantIds.has(targetConnId)) { dragState = null; return; }
+    const draggedConn = findConn(loc, draggedId);
+    const targetConn = findConn(loc, targetConnId);
+    if (!draggedConn || !targetConn) { dragState = null; return; }
+    pushUndo();
+    draggedConn.parentId = targetConn.parentId;
+    const idx = loc.conns.findIndex(c => c.id === draggedId);
+    loc.conns.splice(idx, 1);
+    const targetIdx = loc.conns.findIndex(c => c.id === targetConnId);
+    loc.conns.splice(before ? targetIdx : targetIdx + 1, 0, draggedConn);
+    saveState(); render();
+    dragState = null;
+    return;
+  }
+  const body = e.target.closest(".card-body");
+  if (body) {
+    e.preventDefault();
+    body.classList.remove("drag-over-body");
+    const card = body.closest(".card");
+    const loc = findLoc(dragState.locId);
+    if (loc && card && card.dataset.loc === loc.id) {
+      const draggedConn = findConn(loc, dragState.connId);
+      if (draggedConn && draggedConn.parentId !== null) {
+        pushUndo();
+        draggedConn.parentId = null;
+        const idx = loc.conns.findIndex(c => c.id === dragState.connId);
+        loc.conns.splice(idx, 1);
+        loc.conns.push(draggedConn);
+        saveState(); render();
+      }
+    }
+  }
+  dragState = null;
+});
+
+mainEl.addEventListener("input", (e) => {
+  if (e.target.classList.contains("f-label") || e.target.classList.contains("f-dest")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    if (e.target.classList.contains("f-label")) conn.label = e.target.value;
+    else conn.dest = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("f-section-name")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    conn.label = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("f-floor")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    conn.floor = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("f-door")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    conn.door = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("f-end-floor")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    conn.endFloor = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("f-end-door")) {
+    const row = e.target.closest(".conn");
+    const loc = findLoc(row.dataset.loc);
+    const conn = findConn(loc, row.dataset.conn);
+    conn.endDoor = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("loc-name-input")) {
+    const card = e.target.closest(".card");
+    const loc = findLoc(card.dataset.loc);
+    loc.name = e.target.value;
+    saveState();
+  }
+  if (e.target.classList.contains("loc-notes")) {
+    const card = e.target.closest(".card");
+    const loc = findLoc(card.dataset.loc);
+    loc.notes = e.target.value;
+    e.target.style.height = "auto";
+    e.target.style.height = e.target.scrollHeight + "px";
+    saveState();
+  }
+});
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("filterTag").addEventListener("change", render);
+document.getElementById("sortBy").addEventListener("change", render);
+document.getElementById("expandAll").addEventListener("click", () => {
+  locations.forEach(l => l.open = true); saveState(); render();
+});
+document.getElementById("collapseAll").addEventListener("click", () => {
+  locations.forEach(l => l.open = false); saveState(); render();
+});
+
+function performClearAll() {
+  pushUndo();
+  locations = buildEmptyLocations();
+  editingConns = new Set();
+  editingLocs = new Set();
+  linkSource = null;
+  document.getElementById("search").value = "";
+  document.getElementById("filterTag").value = "all";
+  saveNow();
+  render();
+}
+
+let smartLinkPending = null;
+const smartLinkModal = document.getElementById("smartLinkModal");
+
+function runSmartLink(loc, conn) {
+  const candidates = findSmartLinkCandidates(loc, conn).slice(0, 3);
+  const topScore = candidates.length ? candidates[0].score : 0;
+  if (topScore < 0.95) {
+    const closest = findClosestLocationForCreate(conn.dest, loc.id);
+    if (closest) {
+      candidates.push({ type: "create-warp", locId: closest.loc.id, locName: closest.loc.name, label: closest.label || conn.dest, score: 0 });
+    }
+  }
+  if (!candidates.length) {
+    showIoStatus("No confident match found for this destination — try Link instead", true);
+    return;
+  }
+  openSmartLinkModal(loc, conn, candidates);
+}
+
+function openSmartLinkModal(loc, conn, candidates) {
+  const top = candidates;
+  smartLinkPending = { locId: loc.id, connId: conn.id, candidates: top };
+  const realMatches = top.filter(c => c.type !== "create-warp").length;
+  document.getElementById("smartLinkIntro").textContent =
+    realMatches > 1
+      ? `Found ${realMatches} possible matches for "${conn.label || "this warp"}" \u2192 ${conn.dest}. Pick the right one:`
+      : realMatches === 1
+      ? `Found a likely match for "${conn.label || "this warp"}" \u2192 ${conn.dest}. Confirm it's correct:`
+      : `"${conn.dest}" doesn't match an existing warp yet.`;
+  document.getElementById("smartLinkCandidates").innerHTML = top.map((c, i) => {
+    if (c.type === "create-warp") {
+      return `
+      <div class="smart-candidate sc-create">
+        <div class="sc-text">
+          <div class="sc-loc">${c.locName.replace(/</g, "&lt;")}</div>
+          <div class="sc-conn">Add a new warp${c.label ? ` &mdash; "${c.label.replace(/</g, "&lt;")}"` : ""} here and link it &mdash; closest existing location to "${conn.dest.replace(/</g, "&lt;")}"</div>
+        </div>
+        <button class="ghost sc-confirm" data-idx="${i}">Add &amp; Link</button>
+      </div>`;
+    }
+    const detail = c.type === "location"
+      ? `<div class="sc-conn">Link to the whole location &mdash; no specific warp identified yet</div>`
+      : `<div class="sc-conn">${(c.otherConn.label || "(unlabeled)").replace(/</g, "&lt;")} &rarr; ${(c.otherConn.dest || "").replace(/</g, "&lt;")}</div>`;
+    return `
+    <div class="smart-candidate">
+      <div class="sc-text">
+        <div class="sc-loc">${c.otherLoc.name.replace(/</g, "&lt;")}</div>
+        ${detail}
+        <div class="sc-score">${Math.round(c.score * 100)}% match</div>
+      </div>
+      <button class="ghost sc-confirm" data-idx="${i}">Link this</button>
+    </div>`;
+  }).join("");
+  smartLinkModal.classList.add("open");
+}
+
+document.getElementById("smartLinkCandidates").addEventListener("click", (e) => {
+  const btn = e.target.closest(".sc-confirm");
+  if (!btn || !smartLinkPending) return;
+  const candidate = smartLinkPending.candidates[parseInt(btn.dataset.idx, 10)];
+  const source = { locId: smartLinkPending.locId, connId: smartLinkPending.connId };
+  let linked;
+  if (candidate.type === "create-warp") {
+    linked = createWarpInLocation(candidate.locId, candidate.label, source);
+  } else if (candidate.type === "location") {
+    linked = linkWarpToLocation(source, candidate.otherLoc.id);
+  } else {
+    linked = linkTwoWarps(source, { locId: candidate.otherLoc.id, connId: candidate.otherConn.id }, true);
+  }
+  smartLinkModal.classList.remove("open");
+  smartLinkPending = null;
+  if (linked) showIoStatus(candidate.type === "create-warp" ? "Added & linked" : "Linked");
+});
+document.getElementById("smartLinkCancel").addEventListener("click", () => {
+  smartLinkModal.classList.remove("open");
+  smartLinkPending = null;
+});
+smartLinkModal.addEventListener("click", (e) => {
+  if (e.target === smartLinkModal) { smartLinkModal.classList.remove("open"); smartLinkPending = null; }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && smartLinkModal.classList.contains("open")) {
+    smartLinkModal.classList.remove("open");
+    smartLinkPending = null;
+  }
+});
+
+const clearModal = document.getElementById("clearModal");
+document.getElementById("clearAll").addEventListener("click", () => {
+  clearModal.classList.add("open");
+});
+document.getElementById("clearCancel").addEventListener("click", () => {
+  clearModal.classList.remove("open");
+});
+document.getElementById("clearConfirm").addEventListener("click", () => {
+  clearModal.classList.remove("open");
+  performClearAll();
+});
+clearModal.addEventListener("click", (e) => {
+  if (e.target === clearModal) clearModal.classList.remove("open");
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && clearModal.classList.contains("open")) clearModal.classList.remove("open");
+});
+
+document.getElementById("addLocation").addEventListener("click", () => {
+  pushUndo();
+  const loc = { id: genId(), name: "New Location", notes: "", open: true, connector: "", conns: [] };
+  locations.unshift(loc);
+  editingLocs.add(loc.id);
+  saveState(); render();
+  setTimeout(() => {
+    const input = document.querySelector(`.card[data-loc="${loc.id}"] .loc-name-input`);
+    if (input) { input.focus(); input.select(); }
+  }, 0);
+});
+
+function showIoStatus(text, isError) {
+  const el = document.getElementById("ioStatus");
+  el.textContent = text;
+  el.classList.toggle("error", !!isError);
+  el.classList.add("visible");
+  clearTimeout(showIoStatus._t);
+  showIoStatus._t = setTimeout(() => el.classList.remove("visible"), 2200);
+}
+
+const BRIDGE_URL = "http://localhost:5556";
+
+function formatSignature(data) {
+  if (!data || data.a === undefined) return "";
+  return [data.a, data.b, data.c, data.d, data.e, data.f].join(",");
+}
+
+async function captureSignatureFor(loc, conn) {
+  try {
+    const res = await fetch(BRIDGE_URL + "/latest");
+    const data = await res.json();
+    const sig = formatSignature(data);
+    if (!sig) {
+      showIoStatus("No reading available yet — is the bridge server running?", true);
+      return;
+    }
+    pushUndo();
+    conn.romSignature = sig;
+    saveState();
+    render();
+    showIoStatus("Signature captured: " + sig);
+  } catch (e) {
+    showIoStatus("Couldn't reach the bridge server (localhost:5556)", true);
+  }
+}
+
+function findConnsWithSignature(sig) {
+  const results = [];
+  locations.forEach(loc => loc.conns.forEach(conn => {
+    if (conn.romSignature && conn.romSignature === sig) results.push({ loc, conn });
+  }));
+  return results;
+}
+
+function findConnBySignature(sig) {
+  const all = findConnsWithSignature(sig);
+  return all.length ? all[0] : null;
+}
+
+// Given the warp we just departed from, find the specific conn it's already
+// linked to via a shared connector. This is a confirmed relationship (you
+// manually or automatically linked these two before), which is more reliable
+// than a raw signature scan -- a location with several warps can have
+// destination-side signatures that don't fully distinguish which one you
+// actually arrived through, so a plain scan can land on the wrong entry
+// (typically whichever one happens to be first in the list).
+function findLinkedPartner(sourceConn) {
+  if (!sourceConn || !sourceConn.connector) return null;
+  for (const loc of locations) {
+    for (const conn of loc.conns) {
+      if (conn.id !== sourceConn.id && conn.connector === sourceConn.connector) {
+        return { loc, conn };
+      }
+    }
+  }
+  return null;
+}
+
+// Resolves "where am I right now" given the current signature and (optionally)
+// the warp we just departed from. Prefers an already-confirmed connector link
+// over a plain signature scan when one is available and actually matches.
+function resolveCurrentPosition(sig, departedFrom) {
+  if (departedFrom && departedFrom.conn && departedFrom.conn.connector) {
+    const partner = findLinkedPartner(departedFrom.conn);
+    if (partner && partner.conn.romSignature === sig) {
+      return partner;
+    }
+  }
+  return findConnBySignature(sig);
+}
+
+// Community-sourced map ID table. Each real map is identified by TWO bytes
+// together -- mapNum (high byte) and mapGroup (low byte), e.g. 0x2A01 means
+// mapNum=0x2A, mapGroup=0x01. Keyed here as "mapNum,mapGroup" in decimal.
+const MAP_NAME_TABLE = {
+  "0,0": "Battle Colosseum 2P",
+  "1,0": "Trade Center",
+  "2,0": "Record Corner",
+  "3,0": "Battle Colosseum 4P",
+  "4,0": "Union Room",
+  "0,1": "Viridian Forest",
+  "1,1": "Mt. Moon 1F",
+  "2,1": "Mt. Moon B1F",
+  "3,1": "Mt. Moon B2F",
+  "4,1": "S.S. Anne Exterior",
+  "5,1": "S.S. Anne 1F Corridor",
+  "6,1": "S.S. Anne 2F Corridor",
+  "7,1": "S.S. Anne 3F Corridor",
+  "8,1": "S.S. Anne B1F Corridor",
+  "9,1": "S.S. Anne Deck",
+  "10,1": "S.S. Anne Kitchen",
+  "11,1": "S.S. Anne Captain's Office",
+  "12,1": "S.S. Anne 1F Room 1",
+  "13,1": "S.S. Anne 1F Room 2",
+  "14,1": "S.S. Anne 1F Room 3",
+  "15,1": "S.S. Anne 1F Room 4",
+  "16,1": "S.S. Anne 1F Room 5",
+  "17,1": "S.S. Anne 1F Room 7",
+  "18,1": "S.S. Anne 2F Room 1",
+  "19,1": "S.S. Anne 2F Room 2",
+  "20,1": "S.S. Anne 2F Room 3",
+  "21,1": "S.S. Anne 2F Room 4",
+  "22,1": "S.S. Anne 2F Room 5",
+  "23,1": "S.S. Anne 2F Room 6",
+  "24,1": "S.S. Anne B1F Room 1",
+  "25,1": "S.S. Anne B1F Room 2",
+  "26,1": "S.S. Anne B1F Room 3",
+  "27,1": "S.S. Anne B1F Room 4",
+  "28,1": "S.S. Anne B1F Room 5",
+  "29,1": "S.S. Anne 1F Room 6",
+  "30,1": "Underground Path North Entrance",
+  "31,1": "Underground Path North-South Tunnel",
+  "32,1": "Underground Path South Entrance",
+  "33,1": "Underground Path West Entrance",
+  "34,1": "Underground Path West-East Tunnel",
+  "35,1": "Underground Path East Entrance",
+  "36,1": "Diglett's Cave North Entrance",
+  "37,1": "Diglett's Cave B1F",
+  "38,1": "Diglett's Cave South Entrance",
+  "39,1": "Victory Road 1F",
+  "40,1": "Victory Road 2F",
+  "41,1": "Victory Road 3F",
+  "42,1": "Rocket Hideout B1F",
+  "43,1": "Rocket Hideout B2F",
+  "44,1": "Rocket Hideout B3F",
+  "45,1": "Rocket Hideout B4F",
+  "46,1": "Rocket Hideout Elevator",
+  "47,1": "Silph Co. 1F",
+  "48,1": "Silph Co. 2F",
+  "49,1": "Silph Co. 3F",
+  "50,1": "Silph Co. 4F",
+  "51,1": "Silph Co. 5F",
+  "52,1": "Silph Co. 6F",
+  "53,1": "Silph Co. 7F",
+  "54,1": "Silph Co. 8F",
+  "55,1": "Silph Co. 9F",
+  "56,1": "Silph Co. 10F",
+  "57,1": "Silph Co. 11F",
+  "58,1": "Silph Co. Elevator",
+  "59,1": "Pokemon Mansion 1F",
+  "60,1": "Pokemon Mansion 2F",
+  "61,1": "Pokemon Mansion 3F",
+  "62,1": "Pokemon Mansion B1F",
+  "63,1": "Safari Zone Center",
+  "64,1": "Safari Zone East",
+  "65,1": "Safari Zone North",
+  "66,1": "Safari Zone West",
+  "67,1": "Safari Zone Center Rest House",
+  "68,1": "Safari Zone East Rest House",
+  "69,1": "Safari Zone North Rest House",
+  "70,1": "Safari Zone West Rest House",
+  "71,1": "Safari Zone Secret House",
+  "72,1": "Cerulean Cave 1F",
+  "73,1": "Cerulean Cave 2F",
+  "74,1": "Cerulean Cave B1F",
+  "75,1": "Pokemon League Lorelei's Room",
+  "76,1": "Pokemon League Bruno's Room",
+  "77,1": "Pokemon League Agatha's Room",
+  "78,1": "Pokemon League Lance's Room",
+  "79,1": "Pokemon League Champion's Room",
+  "80,1": "Pokemon League Hall Of Fame",
+  "81,1": "Rock Tunnel 1F",
+  "82,1": "Rock Tunnel B1F",
+  "83,1": "Seafoam Islands 1F",
+  "84,1": "Seafoam Islands B1F",
+  "85,1": "Seafoam Islands B2F",
+  "86,1": "Seafoam Islands B3F",
+  "87,1": "Seafoam Islands B4F",
+  "88,1": "Pokemon Tower 1F",
+  "89,1": "Pokemon Tower 2F",
+  "90,1": "Pokemon Tower 3F",
+  "91,1": "Pokemon Tower 4F",
+  "92,1": "Pokemon Tower 5F",
+  "93,1": "Pokemon Tower 6F",
+  "94,1": "Pokemon Tower 7F",
+  "95,1": "Power Plant",
+  "96,1": "Mt. Ember Ruby Path B4F",
+  "97,1": "Mt. Ember Exterior",
+  "98,1": "Mt. Ember Summit Path 1F",
+  "99,1": "Mt. Ember Summit Path 2F",
+  "100,1": "Mt. Ember Summit Path 3F",
+  "101,1": "Mt. Ember Summit",
+  "102,1": "Mt. Ember Ruby Path B5F",
+  "103,1": "Mt. Ember Ruby Path 1F",
+  "104,1": "Mt. Ember Ruby Path B1F",
+  "105,1": "Mt. Ember Ruby Path B2F",
+  "106,1": "Mt. Ember Ruby Path B3F",
+  "107,1": "Mt. Ember Ruby Path B1F Stairs",
+  "108,1": "Mt. Ember Ruby Path B2F Stairs",
+  "109,1": "Three Island Berry Forest",
+  "110,1": "Four Island Icefall Cave Entrance",
+  "111,1": "Four Island Icefall Cave 1F",
+  "112,1": "Four Island Icefall Cave B1F",
+  "113,1": "Four Island Icefall Cave Back",
+  "114,1": "Five Island Rocket Warehouse",
+  "115,1": "Six Island Dotted Hole 1F",
+  "116,1": "Six Island Dotted Hole B1F",
+  "117,1": "Six Island Dotted Hole B2F",
+  "118,1": "Six Island Dotted Hole B3F",
+  "119,1": "Six Island Dotted Hole B4F",
+  "120,1": "Six Island Dotted Hole Sapphire Room",
+  "121,1": "Six Island Pattern Bush",
+  "122,1": "Six Island Altering Cave",
+  "0,2": "Navel Rock Exterior",
+  "1,2": "Trainer Tower 1F",
+  "2,2": "Trainer Tower 2F",
+  "3,2": "Trainer Tower 3F",
+  "4,2": "Trainer Tower 4F",
+  "5,2": "Trainer Tower 5F",
+  "6,2": "Trainer Tower 6F",
+  "7,2": "Trainer Tower 7F",
+  "8,2": "Trainer Tower 8F",
+  "9,2": "Trainer Tower Roof",
+  "10,2": "Trainer Tower Lobby",
+  "11,2": "Trainer Tower Elevator",
+  "12,2": "Five Island Lost Cave Entrance",
+  "13,2": "Five Island Lost Cave Room 1",
+  "14,2": "Five Island Lost Cave Room 2",
+  "15,2": "Five Island Lost Cave Room 3",
+  "16,2": "Five Island Lost Cave Room 4",
+  "17,2": "Five Island Lost Cave Room 5",
+  "18,2": "Five Island Lost Cave Room 6",
+  "19,2": "Five Island Lost Cave Room 7",
+  "20,2": "Five Island Lost Cave Room 8",
+  "21,2": "Five Island Lost Cave Room 9",
+  "22,2": "Five Island Lost Cave Room 10",
+  "23,2": "Five Island Lost Cave Room 11",
+  "24,2": "Five Island Lost Cave Room 12",
+  "25,2": "Five Island Lost Cave Room 13",
+  "26,2": "Five Island Lost Cave Room 14",
+  "27,2": "Seven Island Tanoby Ruins Monean Chamber",
+  "28,2": "Seven Island Tanoby Ruins Liptoo Chamber",
+  "29,2": "Seven Island Tanoby Ruins Weepth Chamber",
+  "30,2": "Seven Island Tanoby Ruins Dilford Chamber",
+  "31,2": "Seven Island Tanoby Ruins Sufib Chamber",
+  "32,2": "Seven Island Tanoby Ruins Rixy Chamber",
+  "33,2": "Seven Island Tanoby Ruins Viapois Chamber",
+  "34,2": "Three Island Dunsparce Tunnel",
+  "35,2": "Seven Island Sevault Canyon Tanoby Key",
+  "36,2": "Navel Rock 1F",
+  "37,2": "Navel Rock Summit",
+  "38,2": "Navel Rock Base",
+  "39,2": "Navel Rock Summit Path 2F",
+  "40,2": "Navel Rock Summit Path 3F",
+  "41,2": "Navel Rock Summit Path 4F",
+  "42,2": "Navel Rock Summit Path 5F",
+  "43,2": "Navel Rock Base Path B1F",
+  "44,2": "Navel Rock Base Path B2F",
+  "45,2": "Navel Rock Base Path B3F",
+  "46,2": "Navel Rock Base Path B4F",
+  "47,2": "Navel Rock Base Path B5F",
+  "48,2": "Navel Rock Base Path B6F",
+  "49,2": "Navel Rock Base Path B7F",
+  "50,2": "Navel Rock Base Path B8F",
+  "51,2": "Navel Rock Base Path B9F",
+  "52,2": "Navel Rock Base Path B10F",
+  "53,2": "Navel Rock Base Path B11F",
+  "54,2": "Navel Rock B1F",
+  "55,2": "Navel Rock Fork",
+  "56,2": "Birth Island Exterior",
+  "57,2": "One Island Kindle Road Ember Spa",
+  "58,2": "Birth Island Harbor",
+  "59,2": "Navel Rock Harbor",
+  "0,3": "Pallet Town",
+  "1,3": "Viridian City",
+  "2,3": "Pewter City",
+  "3,3": "Cerulean City",
+  "4,3": "Lavender Town",
+  "5,3": "Vermilion City",
+  "6,3": "Celadon City",
+  "7,3": "Fuchsia City",
+  "8,3": "Cinnabar Island",
+  "9,3": "Indigo Plateau Exterior",
+  "10,3": "Saffron City",
+  "11,3": "Saffron City Connection",
+  "12,3": "One Island",
+  "13,3": "Two Island",
+  "14,3": "Three Island",
+  "15,3": "Four Island",
+  "16,3": "Five Island",
+  "17,3": "Seven Island",
+  "18,3": "Six Island",
+  "19,3": "Route 1",
+  "20,3": "Route 2",
+  "21,3": "Route 3",
+  "22,3": "Route 4",
+  "23,3": "Route 5",
+  "24,3": "Route 6",
+  "25,3": "Route 7",
+  "26,3": "Route 8",
+  "27,3": "Route 9",
+  "28,3": "Route 10",
+  "29,3": "Route 11",
+  "30,3": "Route 12",
+  "31,3": "Route 13",
+  "32,3": "Route 14",
+  "33,3": "Route 15",
+  "34,3": "Route 16",
+  "35,3": "Route 17",
+  "36,3": "Route 18",
+  "37,3": "Route 19",
+  "38,3": "Route 20",
+  "39,3": "Route 21 North",
+  "40,3": "Route 21 South",
+  "41,3": "Route 22",
+  "42,3": "Route 23",
+  "43,3": "Route 24",
+  "44,3": "Route 25",
+  "45,3": "One Island Kindle Road",
+  "46,3": "One Island Treasure Beach",
+  "47,3": "Two Island Cape Brink",
+  "48,3": "Three Island Bond Bridge",
+  "49,3": "Three Island Port",
+  "50,3": "Prototype Sevii Isle 6",
+  "51,3": "Prototype Sevii Isle 7",
+  "52,3": "Prototype Sevii Isle 8",
+  "53,3": "Prototype Sevii Isle 9",
+  "54,3": "Five Island Resort Gorgeous",
+  "55,3": "Five Island Water Labyrinth",
+  "56,3": "Five Island Meadow",
+  "57,3": "Five Island Memorial Pillar",
+  "58,3": "Six Island Outcast Island",
+  "59,3": "Six Island Green Path",
+  "60,3": "Six Island Water Path",
+  "61,3": "Six Island Ruin Valley",
+  "62,3": "Seven Island Trainer Tower",
+  "63,3": "Seven Island Sevault Canyon Entrance",
+  "64,3": "Seven Island Sevault Canyon",
+  "65,3": "Seven Island Tanoby Ruins",
+  "0,4": "Pallet Town Player's House 1F",
+  "1,4": "Pallet Town Player's House 2F",
+  "2,4": "Pallet Town Rival's House",
+  "3,4": "Pallet Town Professor Oak's Lab",
+  "0,5": "Viridian City House 1",
+  "1,5": "Viridian City Gym",
+  "2,5": "Viridian City House 2",
+  "3,5": "Viridian City Mart",
+  "4,5": "Viridian City Pokemon Center 1F",
+  "5,5": "Viridian City Pokemon Center 2F",
+  "0,6": "Pewter City Museum 1F",
+  "1,6": "Pewter City Museum 2F",
+  "2,6": "Pewter City Gym",
+  "3,6": "Pewter City Mart",
+  "4,6": "Pewter City House 1",
+  "5,6": "Pewter City Pokemon Center 1F",
+  "6,6": "Pewter City Pokemon Center 2F",
+  "7,6": "Pewter City House 2",
+  "0,7": "Cerulean City House 1",
+  "1,7": "Cerulean City House 2",
+  "2,7": "Cerulean City House 3",
+  "3,7": "Cerulean City Pokemon Center 1F",
+  "4,7": "Cerulean City Pokemon Center 2F",
+  "5,7": "Cerulean City Gym",
+  "6,7": "Cerulean City Bike Shop",
+  "7,7": "Cerulean City Mart",
+  "8,7": "Cerulean City House 4",
+  "9,7": "Cerulean City House 5",
+  "0,8": "Lavender Town Pokemon Center 1F",
+  "1,8": "Lavender Town Pokemon Center 2F",
+  "2,8": "Lavender Town Volunteer Pokemon House",
+  "3,8": "Lavender Town House 1",
+  "4,8": "Lavender Town House 2",
+  "5,8": "Lavender Town Art",
+  "0,9": "Vermilion City House 1",
+  "1,9": "Vermilion City Pokemon Center 1F",
+  "2,9": "Vermilion City Pokemon Center 2F",
+  "3,9": "Vermilion City Pokemon Fan Club",
+  "4,9": "Vermilion City House 2",
+  "5,9": "Vermilion City Mart",
+  "6,9": "Vermilion City Gym",
+  "7,9": "Vermilion City House 3",
+  "0,10": "Celadon City Department Store 1F",
+  "1,10": "Celadon City Department Store 2F",
+  "2,10": "Celadon City Department Store 3F",
+  "3,10": "Celadon City Department Store 4F",
+  "4,10": "Celadon City Department Store 5F",
+  "5,10": "Celadon City Department Store Roof",
+  "6,10": "Celadon City Department Store Elevator",
+  "7,10": "Celadon City Condominiums 1F",
+  "8,10": "Celadon City Condominiums 2F",
+  "9,10": "Celadon City Condominiums 3F",
+  "10,10": "Celadon City Condominiums Roof",
+  "11,10": "Celadon City Condominiums Roof Room",
+  "12,10": "Celadon City Pokemon Center 1F",
+  "13,10": "Celadon City Pokemon Center 2F",
+  "14,10": "Celadon City Game Corner",
+  "15,10": "Celadon City Game Corner Prize Room",
+  "16,10": "Celadon City Gym",
+  "17,10": "Celadon City Restaurant",
+  "18,10": "Celadon City House 1",
+  "19,10": "Celadon City Hotel",
+  "0,11": "Fuchsia City Safari Zone Entrance",
+  "1,11": "Fuchsia City Mart",
+  "2,11": "Fuchsia City Safari Zone Office",
+  "3,11": "Fuchsia City Gym",
+  "4,11": "Fuchsia City House 1",
+  "5,11": "Fuchsia City Pokemon Center 1F",
+  "6,11": "Fuchsia City Pokemon Center 2F",
+  "7,11": "Fuchsia City Wardens House",
+  "8,11": "Fuchsia City House 2",
+  "9,11": "Fuchsia City House 3",
+  "0,12": "Cinnabar Island Gym",
+  "1,12": "Cinnabar Island Pokemon Lab Entrance",
+  "2,12": "Cinnabar Island Pokemon Lab Lounge",
+  "3,12": "Cinnabar Island Pokemon Lab Research Room",
+  "4,12": "Cinnabar Island Pokemon Lab Experiment Room",
+  "5,12": "Cinnabar Island Pokemon Center 1F",
+  "6,12": "Cinnabar Island Pokemon Center 2F",
+  "7,12": "Cinnabar Island Mart",
+  "0,13": "Indigo Plateau Pokemon Center 1F",
+  "1,13": "Indigo Plateau Pokemon Center 2F",
+  "0,14": "Saffron City Copycats House 1F",
+  "1,14": "Saffron City Copycats House 2F",
+  "2,14": "Saffron City Dojo",
+  "3,14": "Saffron City Gym",
+  "4,14": "Saffron City House",
+  "5,14": "Saffron City Mart",
+  "6,14": "Saffron City Pokemon Center 1F",
+  "7,14": "Saffron City Pokemon Center 2F",
+  "8,14": "Saffron City Mr. Psychics House",
+  "9,14": "Saffron City Pokemon Trainer Fan Club",
+  "0,15": "Route 2 Viridian Forest South Entrance",
+  "1,15": "Route 2 House",
+  "2,15": "Route 2 East Building",
+  "3,15": "Route 2 Viridian Forest North Entrance",
+  "0,16": "Route 4 Pokemon Center 1F",
+  "1,16": "Route 4 Pokemon Center 2F",
+  "0,17": "Route 5 Pokemon Day Care",
+  "1,17": "Route 5 South Entrance",
+  "0,18": "Route 6 North Entrance",
+  "1,18": "Route 6 Unused House",
+  "0,19": "Route 7 East Entrance",
+  "0,20": "Route 8 West Entrance",
+  "0,21": "Route 10 Pokemon Center 1F",
+  "1,21": "Route 10 Pokemon Center 2F",
+  "0,22": "Route 11 East Entrance 1F",
+  "1,22": "Route 11 East Entrance 2F",
+  "0,23": "Route 12 North Entrance 1F",
+  "1,23": "Route 12 North Entrance 2F",
+  "2,23": "Route 12 Fishing House",
+  "0,24": "Route 15 West Entrance 1F",
+  "1,24": "Route 15 West Entrance 2F",
+  "0,25": "Route 16 House",
+  "1,25": "Route 16 North Entrance 1F",
+  "2,25": "Route 16 North Entrance 2F",
+  "0,26": "Route 18 East Entrance 1F",
+  "1,26": "Route 18 East Entrance 2F",
+  "0,27": "Route 19 Unused House",
+  "0,28": "Route 22 North Entrance",
+  "0,29": "Route 23 Unused House",
+  "0,30": "Route 25 Sea Cottage",
+  "0,31": "Seven Island House Room 1",
+  "1,31": "Seven Island House Room 2",
+  "2,31": "Seven Island Mart",
+  "3,31": "Seven Island Pokemon Center 1F",
+  "4,31": "Seven Island Pokemon Center 2F",
+  "5,31": "Seven Island Unused House",
+  "6,31": "Seven Island Harbor",
+  "0,32": "One Island Pokemon Center 1F",
+  "1,32": "One Island Pokemon Center 2F",
+  "2,32": "One Island House 1",
+  "3,32": "One Island House 2",
+  "4,32": "One Island Harbor",
+  "0,33": "Two Island Joyful Game Corner",
+  "1,33": "Two Island House",
+  "2,33": "Two Island Pokemon Center 1F",
+  "3,33": "Two Island Pokemon Center 2F",
+  "4,33": "Two Island Harbor",
+  "0,34": "Three Island House 1",
+  "1,34": "Three Island Pokemon Center 1F",
+  "2,34": "Three Island Pokemon Center 2F",
+  "3,34": "Three Island Mart",
+  "4,34": "Three Island House 2",
+  "5,34": "Three Island House 3",
+  "6,34": "Three Island House 4",
+  "7,34": "Three Island House 5",
+  "0,35": "Four Island Pokemon Day Care",
+  "1,35": "Four Island Pokemon Center 1F",
+  "2,35": "Four Island Pokemon Center 2F",
+  "3,35": "Four Island House 1",
+  "4,35": "Four Island Loreleis House",
+  "5,35": "Four Island Harbor",
+  "6,35": "Four Island House 2",
+  "7,35": "Four Island Mart",
+  "0,36": "Five Island Pokemon Center 1F",
+  "1,36": "Five Island Pokemon Center 2F",
+  "2,36": "Five Island Harbor",
+  "3,36": "Five Island House 1",
+  "4,36": "Five Island House 2",
+  "0,37": "Six Island Pokemon Center 1F",
+  "1,37": "Six Island Pokemon Center 2F",
+  "2,37": "Six Island Harbor",
+  "3,37": "Six Island House",
+  "4,37": "Six Island Mart",
+  "0,38": "Three Island Harbor",
+  "0,39": "Five Island Resort Gorgeous House",
+  "0,40": "Two Island Cape Brink House",
+  "0,41": "Six Island Water Path House 1",
+  "1,41": "Six Island Water Path House 2",
+  "0,42": "Seven Island Sevault Canyon House",
+};
+
+// A couple of small spelling/naming differences between the community table
+// and this tracker's own location names.
+const MAP_NAME_ALIASES = {
+  "Pok\u00e9mon Mansion": "Pokemon Mansion",
+  "Pok\u00e9mon Tower": "Pokemon Tower",
+  "Pok\u00e9mon League": "Pokemon League",
+  "Rocket Hideout": "Team Rocket Hideout",
+};
+function normalizeMapName(name) {
+  return MAP_NAME_ALIASES[name] || name;
+}
+
+// CONFIRMED: mapNum and mapGroup are read directly from their own dedicated
+// addresses (0x031DBD and 0x031DBC), validated against Route 11's known
+// table entry (29, 3). No more guessing across the 6 warp-signature bytes --
+// this is a direct, reliable lookup.
+function resolveMapNameCandidates(data) {
+  if (!data || data.mapNum === undefined || data.mapGroup === undefined) return [];
+  const name = MAP_NAME_TABLE[data.mapNum + "," + data.mapGroup];
+  if (!name) return [];
+  return [{
+    numByte: "mapNum", grpByte: "mapGroup",
+    numRaw: data.mapNum, grpRaw: data.mapGroup,
+    name: normalizeMapName(name)
+  }];
+}
+
+let liveTrackingEnabled = false;
+let livePollTimer = null;
+let lastLiveSignature = null;
+let currentLiveMatchId = null;
+let previousLiveMatch = null;
+let isFirstPollSinceStart = true;
+let autoCreateWarps = true;
+
+const IGNORED_SIGNATURES_KEY = "firered-leafgreen-ignored-signatures-v1";
+let ignoredSignatures = new Set();
+
+function loadIgnoredSignatures() {
+  try {
+    const raw = localStorage.getItem(IGNORED_SIGNATURES_KEY);
+    if (raw) ignoredSignatures = new Set(JSON.parse(raw));
+  } catch (e) { /* start with an empty set */ }
+}
+function saveIgnoredSignatures() {
+  try { localStorage.setItem(IGNORED_SIGNATURES_KEY, JSON.stringify([...ignoredSignatures])); }
+  catch (e) { /* not fatal, just means it may prompt again next session */ }
+}
+loadIgnoredSignatures();
+
+const STAGING_LOCATION_NAME = "\u{1F6F0}\u{FE0F} Live-Detected Warps";
+
+function getOrCreateStagingLocation() {
+  let staging = locations.find(l => l.name === STAGING_LOCATION_NAME);
+  if (!staging) {
+    staging = {
+      id: genId(), name: STAGING_LOCATION_NAME,
+      notes: "Warps auto-created by Live Tracking. Rename each entry, fill in its details, then drag it into the location it actually belongs to.",
+      open: true, connector: "", conns: []
+    };
+    locations.unshift(staging);
+  }
+  return staging;
+}
+
+let pendingQuickWarp = null;
+
+function refreshLocationsDatalist() {
+  const list = document.getElementById("allLocationsList");
+  if (!list) return;
+  list.innerHTML = locations
+    .filter(l => l.name !== STAGING_LOCATION_NAME)
+    .map(l => `<option value="${l.name.replace(/"/g, "&quot;")}">`)
+    .join("");
+}
+
+function findLocationByExactName(name) {
+  return locations.find(l => l.name.toLowerCase() === name.toLowerCase());
+}
+
+function refreshWarpOverwriteOptions(locationInputId, overwriteSelectId, excludeConnId) {
+  const locName = document.getElementById(locationInputId).value.trim();
+  const select = document.getElementById(overwriteSelectId);
+  const loc = locName ? findLocationByExactName(locName) : null;
+  const options = ['<option value="">\u2212 Create new warp \u2212</option>'];
+  if (loc) {
+    loc.conns.forEach(c => {
+      if (c.isSection) return;
+      if (c.id === excludeConnId) return;
+      if (c.connector) return; // already linked elsewhere -- not safe to overwrite
+      const label = c.label || "(unlabeled)";
+      const hint = c.dest ? ` \u2192 ${c.dest}` : "";
+      options.push(`<option value="${c.id}">${label.replace(/</g, "&lt;")}${hint.replace(/</g, "&lt;")}</option>`);
+    });
+  }
+  select.innerHTML = options.join("");
+}
+
+function refreshSectionOptions(locationInputId, sectionListId) {
+  const locName = document.getElementById(locationInputId).value.trim();
+  const list = document.getElementById(sectionListId);
+  const loc = locName ? findLocationByExactName(locName) : null;
+  const sections = loc ? loc.conns.filter(c => c.isSection) : [];
+  list.innerHTML = sections.map(s => `<option value="${(s.label || "").replace(/"/g, "&quot;")}">`).join("");
+}
+
+function openQuickWarpModal(staging, destConn, candidates, rollback) {
+  pendingQuickWarp = { stagingId: staging.id, connId: destConn.id, rollback: rollback || null };
+  refreshLocationsDatalist();
+
+  const contextEl = document.getElementById("quickWarpContext");
+  const lines = [];
+  if (rollback && rollback.reusingStart) {
+    lines.push(`Starting point already known: ${rollback.startLocName} \u2192 ${rollback.startLabelKnown || "(unlabeled)"}`);
+  } else {
+    lines.push("No known starting warp yet \u2014 fill in both ends.");
+  }
+  if (candidates && candidates.length) {
+    lines.push(`Detected: ${candidates[0].name} (mapNum=${candidates[0].numRaw}, mapGroup=${candidates[0].grpRaw})`);
+  }
+  contextEl.textContent = lines.join("  |  ");
+
+  const startVals = (rollback && rollback.reusingStart) ? {
+    loc: rollback.startLocName || "", label: rollback.startLabelKnown || "",
+    floor: rollback.startFloorKnown || "", door: rollback.startDoorKnown || "", direction: rollback.startDirectionKnown || ""
+  } : { loc: "", label: "", floor: "", door: "", direction: "" };
+
+  document.getElementById("quickWarpStartLocation").value = startVals.loc;
+  document.getElementById("quickWarpStartLabel").value = startVals.label;
+  document.getElementById("quickWarpStartSection").value = "";
+  document.getElementById("quickWarpStartFloor").value = startVals.floor;
+  document.getElementById("quickWarpStartDoor").value = startVals.door;
+  document.getElementById("quickWarpStartDirection").innerHTML = directionOptions(startVals.direction);
+
+  document.getElementById("quickWarpLocation").value = (candidates && candidates.length) ? candidates[0].name : "";
+  document.getElementById("quickWarpLabel").value = "";
+  document.getElementById("quickWarpSection").value = "";
+  document.getElementById("quickWarpFloor").value = "";
+  document.getElementById("quickWarpDoor").value = "";
+  document.getElementById("quickWarpDirection").innerHTML = directionOptions("");
+  document.getElementById("quickWarpTag").innerHTML = tagOptions("");
+
+  refreshWarpOverwriteOptions("quickWarpStartLocation", "quickWarpStartOverwrite", pendingQuickWarp.rollback && pendingQuickWarp.rollback.startConnId);
+  refreshSectionOptions("quickWarpStartLocation", "quickWarpStartSectionList");
+  refreshWarpOverwriteOptions("quickWarpLocation", "quickWarpOverwrite", destConn.id);
+  refreshSectionOptions("quickWarpLocation", "quickWarpSectionList");
+
+  document.getElementById("quickWarpModal").classList.add("open");
+  setTimeout(() => {
+    const el = document.getElementById((rollback && rollback.reusingStart) ? "quickWarpLocation" : "quickWarpStartLocation");
+    el.focus();
+    el.select();
+  }, 30);
+}
+
+function closeQuickWarpModal() {
+  document.getElementById("quickWarpModal").classList.remove("open");
+  pendingQuickWarp = null;
+}
+
+function flashConnRows(ids) {
+  setTimeout(() => {
+    let first = null;
+    ids.forEach(id => {
+      const row = document.querySelector(`.conn[data-conn="${id}"]`);
+      if (row) {
+        row.classList.add("connector-flash");
+        if (!first) first = row;
+      }
+    });
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => {
+      ids.forEach(id => {
+        const row = document.querySelector(`.conn[data-conn="${id}"]`);
+        if (row) row.classList.remove("connector-flash");
+      });
+    }, 1700);
+  }, 30);
+}
+
+function findOrCreateSection(loc, name) {
+  let section = loc.conns.find(c => c.isSection && (c.label || "").toLowerCase() === name.toLowerCase());
+  if (!section) {
+    section = {
+      id: genId(), label: name, dest: "", tag: "", connector: "",
+      floor: "", door: "", direction: "", endFloor: "", endDoor: "", endDirection: "",
+      romSignature: "", parentId: null, isSection: true, taken: false
+    };
+    loc.conns.push(section);
+  }
+  return section;
+}
+
+function applyQuickWarp(save) {
+  if (!pendingQuickWarp) return;
+  const staging = findLoc(pendingQuickWarp.stagingId);
+  let conn = staging && findConn(staging, pendingQuickWarp.connId);
+  if (!conn) { closeQuickWarpModal(); return; }
+  const rb = pendingQuickWarp.rollback || {};
+
+  if (save) {
+    pushUndo();
+
+    // ---- Destination warp ----
+    const locationName = document.getElementById("quickWarpLocation").value.trim();
+    const label = document.getElementById("quickWarpLabel").value.trim();
+    const sectionName = document.getElementById("quickWarpSection").value.trim();
+    const floor = document.getElementById("quickWarpFloor").value.trim();
+    const door = document.getElementById("quickWarpDoor").value.trim();
+    const direction = document.getElementById("quickWarpDirection").value;
+    const tag = document.getElementById("quickWarpTag").value;
+    const overwriteId = document.getElementById("quickWarpOverwrite").value;
+
+    let targetLoc = staging;
+    if (locationName) {
+      targetLoc = findLocationByExactName(locationName);
+      if (!targetLoc) {
+        targetLoc = { id: genId(), name: locationName, notes: "", open: true, connector: "", conns: [] };
+        locations.push(targetLoc);
+      }
+    }
+
+    if (overwriteId) {
+      // Merge the captured signature/connector onto the chosen existing warp,
+      // and discard the auto-created placeholder instead of keeping both.
+      const existing = findConn(targetLoc, overwriteId);
+      if (existing) {
+        existing.romSignature = conn.romSignature;
+        if (conn.connector) existing.connector = conn.connector;
+        staging.conns = staging.conns.filter(c => c.id !== conn.id);
+        conn = existing;
+      }
+    } else if (targetLoc.id !== staging.id) {
+      staging.conns = staging.conns.filter(c => c.id !== conn.id);
+      targetLoc.conns.push(conn);
+      targetLoc.open = true;
+    }
+
+    if (label) conn.label = label;
+    if (floor) conn.floor = floor;
+    if (door) conn.door = door;
+    if (direction) conn.direction = direction;
+    if (tag) conn.tag = tag;
+    if (sectionName) conn.parentId = findOrCreateSection(targetLoc, sectionName).id;
+    targetLoc.open = true;
+
+    // ---- Starting point warp (either the already-known one, or a fresh one) ----
+    const startStagingLoc = findLoc(rb.startLocId) || staging;
+    let startConn = findConn(startStagingLoc, rb.startConnId);
+    const flashIds = [conn.id];
+
+    if (startConn) {
+      const startLocationName = document.getElementById("quickWarpStartLocation").value.trim();
+      const startLabel = document.getElementById("quickWarpStartLabel").value.trim();
+      const startSectionName = document.getElementById("quickWarpStartSection").value.trim();
+      const startFloor = document.getElementById("quickWarpStartFloor").value.trim();
+      const startDoor = document.getElementById("quickWarpStartDoor").value.trim();
+      const startDirection = document.getElementById("quickWarpStartDirection").value;
+      const startOverwriteId = document.getElementById("quickWarpStartOverwrite").value;
+
+      let startTargetLoc = startStagingLoc;
+      if (startLocationName) {
+        startTargetLoc = findLocationByExactName(startLocationName);
+        if (!startTargetLoc) {
+          startTargetLoc = { id: genId(), name: startLocationName, notes: "", open: true, connector: "", conns: [] };
+          locations.push(startTargetLoc);
+        }
+      }
+
+      if (startOverwriteId) {
+        const existing = findConn(startTargetLoc, startOverwriteId);
+        if (existing) {
+          existing.romSignature = startConn.romSignature;
+          if (startConn.connector) existing.connector = startConn.connector;
+          startStagingLoc.conns = startStagingLoc.conns.filter(c => c.id !== startConn.id);
+          startConn = existing;
+        }
+      } else if (startTargetLoc.id !== startStagingLoc.id) {
+        startStagingLoc.conns = startStagingLoc.conns.filter(c => c.id !== startConn.id);
+        startTargetLoc.conns.push(startConn);
+        startTargetLoc.open = true;
+      }
+
+      if (startLabel) startConn.label = startLabel;
+      if (startFloor) startConn.floor = startFloor;
+      if (startDoor) startConn.door = startDoor;
+      if (startDirection) startConn.direction = startDirection;
+      if (startSectionName) startConn.parentId = findOrCreateSection(startTargetLoc, startSectionName).id;
+      startTargetLoc.open = true;
+
+      // Cross-fill destination text and each other's ending-warp fields --
+      // same mechanism manual linking uses.
+      fillReciprocalDest(startTargetLoc, startConn, targetLoc, conn);
+      pushMetadataBothWays(startConn, conn);
+      flashIds.push(startConn.id);
+    }
+
+    // Keep the "currently here" reference pointed at this warp's real, final location.
+    previousLiveMatch = { loc: targetLoc, conn };
+    currentLiveMatchId = conn.id;
+
+    saveState();
+    render();
+    flashConnRows(flashIds);
+    showIoStatus("Both warps saved");
+  }
+
+  closeQuickWarpModal();
+}
+
+function ignoreQuickWarp() {
+  if (!pendingQuickWarp) return;
+  const staging = findLoc(pendingQuickWarp.stagingId);
+  const conn = staging && findConn(staging, pendingQuickWarp.connId);
+  const rb = pendingQuickWarp.rollback || {};
+
+  if (conn) {
+    pushUndo();
+    if (conn.romSignature) ignoredSignatures.add(conn.romSignature);
+
+    const startLoc = findLoc(rb.startLocId);
+    const startConn = startLoc && findConn(startLoc, rb.startConnId);
+
+    if (rb.reusingStart && startConn) {
+      // The starting warp already existed before this prompt -- leave it alone,
+      // just undo the connector we optimistically assigned it.
+      if (rb.startConnectorWasEmpty) startConn.connector = "";
+    } else if (startConn && startLoc) {
+      // The starting warp was freshly created for this prompt -- discard it too.
+      if (startConn.romSignature) ignoredSignatures.add(startConn.romSignature);
+      startLoc.conns = startLoc.conns.filter(c => c.id !== startConn.id);
+    }
+
+    staging.conns = staging.conns.filter(c => c.id !== conn.id);
+    previousLiveMatch = (rb.reusingStart && startLoc && startConn) ? { loc: startLoc, conn: startConn } : null;
+    currentLiveMatchId = previousLiveMatch ? previousLiveMatch.conn.id : null;
+
+    saveIgnoredSignatures();
+    saveState();
+    render();
+    showIoStatus("Won't prompt for this transition again \u2014 Ctrl+Z to undo");
+  }
+  closeQuickWarpModal();
+}
+
+document.getElementById("quickWarpStartLocation").addEventListener("input", () => {
+  refreshWarpOverwriteOptions("quickWarpStartLocation", "quickWarpStartOverwrite", pendingQuickWarp && pendingQuickWarp.rollback && pendingQuickWarp.rollback.startConnId);
+  refreshSectionOptions("quickWarpStartLocation", "quickWarpStartSectionList");
+});
+document.getElementById("quickWarpLocation").addEventListener("input", () => {
+  refreshWarpOverwriteOptions("quickWarpLocation", "quickWarpOverwrite", pendingQuickWarp && pendingQuickWarp.connId);
+  refreshSectionOptions("quickWarpLocation", "quickWarpSectionList");
+});
+
+document.getElementById("quickWarpSave").addEventListener("click", () => applyQuickWarp(true));
+document.getElementById("quickWarpSkip").addEventListener("click", () => applyQuickWarp(false));
+document.getElementById("quickWarpIgnore").addEventListener("click", () => ignoreQuickWarp());
+document.getElementById("quickWarpModal").addEventListener("click", (e) => {
+  if (e.target.id === "quickWarpModal") applyQuickWarp(false);
+});
+document.getElementById("quickWarpModal").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); applyQuickWarp(true); }
+  else if (e.key === "Escape") { e.preventDefault(); applyQuickWarp(false); }
+});
+
+function autoCreateWarpFromLiveTracking(sig, candidates, priorSig) {
+  const staging = getOrCreateStagingLocation();
+  const priorMatch = previousLiveMatch;
+  pushUndo();
+
+  let startLoc, startConn, reusingStart = false, startConnectorWasEmpty = false;
+  if (priorMatch && !priorMatch.conn.connector) {
+    // Reuse the already-known/captured starting warp -- but only if it isn't
+    // already linked to something else. A warp that's already bridged represents
+    // a specific, complete connection; repurposing it for a different new
+    // transition would create an invalid multi-way connector collision.
+    startLoc = priorMatch.loc;
+    startConn = priorMatch.conn;
+    reusingStart = true;
+    startConnectorWasEmpty = true;
+  } else {
+    // No known (or safely reusable) starting point -- create one fresh,
+    // capturing its signature if we have it.
+    startLoc = staging;
+    startConn = {
+      id: genId(), label: "Starting Point", dest: "", tag: "",
+      connector: "", floor: "", door: "", direction: "",
+      endFloor: "", endDoor: "", endDirection: "",
+      romSignature: priorSig || "", parentId: null, isSection: false, taken: false
+    };
+    staging.conns.push(startConn);
+  }
+
+  const value = startConn.connector || nextConnectorNumber();
+  startConn.connector = value;
+
+  const destConn = {
+    id: genId(), label: "New Warp", dest: "", tag: "",
+    connector: value, floor: "", door: "", direction: "",
+    endFloor: "", endDoor: "", endDirection: "",
+    romSignature: sig, parentId: null, isSection: false, taken: false
+  };
+  staging.conns.push(destConn);
+  staging.open = true;
+  saveState();
+  render();
+  openQuickWarpModal(staging, destConn, candidates, {
+    startLocId: startLoc.id, startConnId: startConn.id, reusingStart, startConnectorWasEmpty,
+    startLocName: reusingStart ? startLoc.name : "",
+    startLabelKnown: reusingStart ? startConn.label : "",
+    startFloorKnown: reusingStart ? startConn.floor : "",
+    startDoorKnown: reusingStart ? startConn.door : "",
+    startDirectionKnown: reusingStart ? startConn.direction : "",
+  });
+  return { loc: staging, conn: destConn };
+}
+
+function setLiveStatus(state, text, hasMatch, extraButton) {
+  const el = document.getElementById("liveStatus");
+  el.style.display = "flex";
+  el.className = "live-status " + state;
+  let buttonHtml = "";
+  if (hasMatch) {
+    buttonHtml = `<button class="ghost jump-live" id="jumpToLiveBtn">Jump to it</button>`;
+  } else if (extraButton) {
+    buttonHtml = `<button class="ghost jump-live" id="${extraButton.id}">${extraButton.label}</button>`;
+  }
+  el.innerHTML = `<span class="dot"></span><span>${text}</span>` + buttonHtml;
+}
+
+async function pollLiveTracking() {
+  try {
+    const res = await fetch(BRIDGE_URL + "/latest");
+    const data = await res.json();
+    const sig = formatSignature(data);
+    if (!sig) {
+      setLiveStatus("disconnected", "Connected, but no reading yet — walk around in-game to send data.", false);
+      return;
+    }
+    if (sig === lastLiveSignature) return;
+    const priorSig = lastLiveSignature;
+    lastLiveSignature = sig;
+    const isFirst = isFirstPollSinceStart;
+    isFirstPollSinceStart = false;
+    const match = resolveCurrentPosition(sig, previousLiveMatch);
+
+    if (match) {
+      // If we just arrived here from a different captured warp, auto-link them --
+      // the warp we left probably leads exactly here, so fill in its destination
+      // and establish the connector bridge automatically.
+      if (previousLiveMatch && previousLiveMatch.conn.id !== match.conn.id) {
+        const alreadyLinked = previousLiveMatch.conn.connector && previousLiveMatch.conn.connector === match.conn.connector;
+        if (!alreadyLinked) {
+          linkTwoWarps(
+            { locId: previousLiveMatch.loc.id, connId: previousLiveMatch.conn.id },
+            { locId: match.loc.id, connId: match.conn.id }
+          );
+          showIoStatus(`Auto-linked: ${previousLiveMatch.conn.label || "warp"} \u2192 ${match.loc.name}`);
+        }
+      }
+      previousLiveMatch = match;
+      currentLiveMatchId = match.conn.id;
+
+      setLiveStatus("connected", `Currently at: ${match.loc.name}${match.conn.label ? ` (${match.conn.label})` : ""}`, true);
+      match.loc.open = true;
+      render();
+      // Scroll to the location card, not the exact warp row -- FR/LG's
+      // signature can't always distinguish between multiple warps into the
+      // same destination, so pinpointing a specific row would sometimes be
+      // misleadingly precise. The card-level location is reliable; treat
+      // that as the honest level of accuracy to display.
+      setTimeout(() => {
+        const card = document.querySelector(`.card[data-loc="${match.loc.id}"]`);
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+          card.classList.add("connector-flash");
+          setTimeout(() => card.classList.remove("connector-flash"), 1700);
+        }
+      }, 30);
+    } else {
+      if (ignoredSignatures.has(sig)) {
+        setLiveStatus("connected", "Passed through (not tracked)", false, { id: "untrackBtn", label: "Track this" });
+        return;
+      }
+      const candidates = resolveMapNameCandidates(data);
+      if (autoCreateWarps && !isFirst) {
+        const created = autoCreateWarpFromLiveTracking(sig, candidates, priorSig);
+        if (created) {
+          previousLiveMatch = created;
+          currentLiveMatchId = created.conn.id;
+          return;
+        }
+      }
+      previousLiveMatch = null;
+      currentLiveMatchId = null;
+      const guess = candidates.length ? ` — this is ${candidates[0].name}` : "";
+      setLiveStatus("connected", `Currently at an uncaptured location (signature: ${sig})${guess} — use the \u{1F4E1} button on a warp to capture it.`, false);
+      render();
+    }
+  } catch (e) {
+    setLiveStatus("disconnected", "Bridge server not reachable at localhost:5556 — is bridge_server_file.js running?");
+  }
+}
+
+function startLiveTracking() {
+  liveTrackingEnabled = true;
+  lastLiveSignature = null;
+  isFirstPollSinceStart = true;
+  document.getElementById("liveTrackingToggle").textContent = "\u{1F4E1} On";
+  document.getElementById("liveTrackingToggle").classList.add("tracking-on");
+  document.getElementById("liveStatus").style.display = "flex";
+  pollLiveTracking();
+  livePollTimer = setInterval(pollLiveTracking, 1500);
+}
+
+function stopLiveTracking() {
+  liveTrackingEnabled = false;
+  clearInterval(livePollTimer);
+  livePollTimer = null;
+  document.getElementById("liveTrackingToggle").textContent = "\u{1F4E1} Off";
+  document.getElementById("liveTrackingToggle").classList.remove("tracking-on");
+  document.getElementById("liveStatus").style.display = "none";
+}
+
+document.getElementById("liveTrackingToggle").addEventListener("click", () => {
+  if (liveTrackingEnabled) stopLiveTracking();
+  else startLiveTracking();
+});
+
+document.getElementById("autoCreateToggle").addEventListener("change", (e) => {
+  autoCreateWarps = e.target.checked;
+});
+
+document.getElementById("liveStatus").addEventListener("click", (e) => {
+  if (e.target.id === "jumpToLiveBtn" && lastLiveSignature) {
+    const match = findConnBySignature(lastLiveSignature);
+    if (match) {
+      const card = document.querySelector(`.card[data-loc="${match.loc.id}"]`);
+      if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+  if (e.target.id === "untrackBtn" && lastLiveSignature) {
+    pushUndo();
+    ignoredSignatures.delete(lastLiveSignature);
+    saveIgnoredSignatures();
+    lastLiveSignature = null; // forces the next poll to treat it as a fresh signature again
+    showIoStatus("This location can be tracked again");
+  }
+});
+
+document.getElementById("exportBtn").addEventListener("click", () => {
+  try {
+    const blob = new Blob([JSON.stringify(locations, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `sinnoh-warp-log-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showIoStatus("Exported");
+  } catch (e) {
+    console.error("export failed", e);
+    showIoStatus("Export failed", true);
+  }
+});
+
+let pendingImport = null;
+const importFileInput = document.getElementById("importFile");
+const importModal = document.getElementById("importModal");
+
+document.getElementById("importBtn").addEventListener("click", () => importFileInput.click());
+
+importFileInput.addEventListener("change", () => {
+  const file = importFileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!Array.isArray(parsed)) throw new Error("not an array");
+      const looksValid = parsed.every(l => l && typeof l.name === "string" && Array.isArray(l.conns));
+      if (!looksValid) throw new Error("unexpected shape");
+      pendingImport = parsed;
+      document.getElementById("importModalText").textContent =
+        `This will replace everything currently in the log with the ${parsed.length} location(s) from "${file.name}". This can't be undone.`;
+      importModal.classList.add("open");
+    } catch (e) {
+      console.error("import parse failed", e);
+      showIoStatus("That file doesn't look like a valid export", true);
+    }
+    importFileInput.value = "";
+  };
+  reader.onerror = () => { showIoStatus("Couldn't read that file", true); importFileInput.value = ""; };
+  reader.readAsText(file);
+});
+
+document.getElementById("importCancel").addEventListener("click", () => {
+  pendingImport = null;
+  importModal.classList.remove("open");
+});
+document.getElementById("importConfirm").addEventListener("click", () => {
+  if (pendingImport) {
+    pushUndo();
+    locations = pendingImport.map(l => ({
+      id: l.id || genId(),
+      name: l.name || "Unnamed",
+      notes: l.notes || "",
+      open: !!l.open,
+      connector: l.connector || "",
+      conns: (l.conns || []).map(c => ({
+        id: c.id || genId(),
+        label: c.label || "",
+        dest: c.dest || "",
+        tag: c.tag || "",
+        connector: c.connector || "",
+        floor: c.floor || "",
+        door: c.door || "",
+        direction: c.direction || "",
+        endFloor: c.endFloor || "",
+        endDoor: c.endDoor || "",
+        endDirection: c.endDirection || "",
+        romSignature: c.romSignature || "",
+        parentId: c.parentId || null,
+        isSection: !!c.isSection,
+        taken: !!c.taken,
+      })),
+    }));
+    editingConns = new Set();
+    editingLocs = new Set();
+    linkSource = null;
+    document.getElementById("search").value = "";
+    document.getElementById("filterTag").value = "all";
+    pendingImport = null;
+    saveNow();
+    render();
+    showIoStatus("Imported");
+  }
+  importModal.classList.remove("open");
+});
+importModal.addEventListener("click", (e) => {
+  if (e.target === importModal) { pendingImport = null; importModal.classList.remove("open"); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && importModal.classList.contains("open")) {
+    pendingImport = null;
+    importModal.classList.remove("open");
+  }
+});
+
+document.getElementById("undoBtn").addEventListener("click", undo);
+document.getElementById("redoBtn").addEventListener("click", redo);
+document.addEventListener("keydown", (e) => {
+  const inField = document.activeElement && document.activeElement.matches("input, textarea");
+  if (inField) return;
+  const isUndoCombo = (e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z";
+  const isRedoCombo = (e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"));
+  if (isUndoCombo) {
+    e.preventDefault();
+    undo();
+  } else if (isRedoCombo) {
+    e.preventDefault();
+    redo();
+  }
+});
+
+(async function init() {
+  await loadState();
+  render();
+})();
+
+const glossaryTab = document.getElementById("glossaryTab");
+const glossaryPanel = document.getElementById("glossaryPanel");
+const glossaryOverlay = document.getElementById("glossaryOverlay");
+
+function toggleGlossary(show) {
+  glossaryPanel.classList.toggle("open", show);
+  glossaryOverlay.classList.toggle("open", show);
+}
+glossaryTab.addEventListener("click", () => toggleGlossary(!glossaryPanel.classList.contains("open")));
+document.getElementById("glossaryClose").addEventListener("click", () => toggleGlossary(false));
+glossaryOverlay.addEventListener("click", () => toggleGlossary(false));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && glossaryPanel.classList.contains("open")) toggleGlossary(false);
+});
+
+const tocTab = document.getElementById("tocTab");
+const tocPanel = document.getElementById("tocPanel");
+const tocOverlay = document.getElementById("tocOverlay");
+
+function toggleToc(show) {
+  tocPanel.classList.toggle("open", show);
+  tocOverlay.classList.toggle("open", show);
+}
+tocTab.addEventListener("click", () => toggleToc(!tocPanel.classList.contains("open")));
+document.getElementById("tocClose").addEventListener("click", () => toggleToc(false));
+tocOverlay.addEventListener("click", () => toggleToc(false));
+document.getElementById("tocList").addEventListener("click", (e) => {
+  const item = e.target.closest(".toc-item");
+  if (item) jumpToLocation(item.dataset.loc);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && tocPanel.classList.contains("open")) toggleToc(false);
+});
+</script>
+
+</body>
+</html>
