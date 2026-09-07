@@ -1,0 +1,1669 @@
+POKEMON PLATINUM -- fielddata/maptable/mapname.bin
+Parsed reference: 593 entries, 16-byte fixed records, extracted directly
+from the uploaded ROM file. This is factual/structural data, not guesswork.
+========================================================================
+
+HOW TO USE THIS FILE
+------------------------------------------------------------------------
+1. Once RAM Search finds the raw 'current map ID' value while standing
+   in a REAL, RECOGNIZABLE location (e.g. Oreburgh City), search for
+   that number in the FLAT INDEX LIST at the bottom of this file.
+2. Note which labeled group/run that index falls into.
+3. That single confirmed point anchors the whole surrounding run --
+   since entries within one run are contiguous and almost certainly
+   represent the SAME city's buildings in a fixed order, you can often
+   infer the rest of that run immediately.
+
+IMPORTANT: several short codes (C01-C11, D05, D26, R21, R22, T02-T07,
+W22) are REUSED in separate, non-contiguous runs later in the file --
+almost certainly because Battle Frontier, the Underground, or Wi-Fi
+areas have their own independent 'City 01, City 02...' labeling,
+unrelated to the main Sinnoh overworld. Each occurrence is labeled
+separately below (occurrence #1, #2, etc.) so they don't get confused.
+
+CONFIRMED FACTS:
+  - The first 11 C## runs (indices 3-196) are the most likely candidates
+    for Sinnoh's 8 gym cities + a few other major hubs, since C01's
+    first occurrence includes a GYM building -- this rules out any
+    non-gym town (Twinleaf, Sandgem, etc.) for that specific run.
+  - NOT yet confirmed: the exact city name for any specific run.
+    Needs one empirical RAM Search data point to anchor the sequence.
+
+CONFIRMED VIA LIVE TESTING + TCRF CROSS-VALIDATION (updated as we go):
+  - C01 (indices 3-32)   = JUBILIFE CITY
+      (has an unused/leftover GYM sub-entry from Diamond/Pearl development --
+       Jubilife has no real gym in the final game; confirmed independently
+       by TCRF's Unused Maps article)
+  - C02 (indices 33-44)   = CANALAVE CITY
+  - C03 (indices 45-64)   = OREBURGH CITY
+      -> C03GYM0101 = Oreburgh Gym, C03PC0101/0102 = Poke Center 1F/2F
+  - C04 (indices 65-85)   = ETERNA CITY
+  - C05 (indices 86-119)  = HEARTHOME CITY
+  - C06 (indices 120-131) = PASTORIA CITY
+  - C07 (indices 132-149) = VEILSTONE CITY
+  - C08 (indices 150-164) = SUNYSHORE CITY
+  - C09 (indices 165-171) = SNOWPOINT CITY
+  - C10 (indices 172-187) = POKEMON LEAGUE
+  - C11 (indices 188-196) = FIGHT AREA, BATTLE PARK & BATTLE FRONTIER
+      (a battle-facility complex, not a regular town -- explains why it has
+       no GYM entry)
+
+  *** ALL 11 "C##" GROUPS ARE NOW FULLY CONFIRMED. *** All 8 real Sinnoh
+  gym cities are accounted for (Oreburgh, Eterna, Veilstone, Pastoria,
+  Hearthome, Canalave, Snowpoint, Sunyshore), plus Jubilife's scrapped gym
+  (C01), Pokemon League (C10), and the Fight Area/Battle Frontier complex
+  (C11).
+
+  - D05 = associated with HALL OF ORIGIN (normally an event-only location,
+      but kept in the tracker's location list since a warp randomizer could
+      plausibly route a warp there anyway)
+  - R### prefixes = the LITERAL real route number, no decoding needed
+      (e.g. index 353 = "R207" = Route 207, exactly)
+  - Our indexing has been cross-validated against 42 independently-researched
+      hex offsets published by TCRF's Unused Maps article -- 41/42 exact
+      matches (the one "mismatch" was TCRF displaying the same link text
+      twice for two adjacent pages, D05R0116 and D05R0117, not an actual
+      discrepancy). Our indexing scheme is now considered highly reliable.
+
+CONFIRMED VIA LIVE TESTING (this round):
+  - D01 = Iron Island
+  - D02 = Valley Windworks
+  - D03 = Eterna Forest
+  - D04 = Fuego Ironworks
+  - D07 = Solaceon Ruins
+  - D09 = Victory Road
+  - D10 = Pal Park
+  - D11 + D12 = Ravaged Path (two groups, same real location -- merged into
+      one card in the tracker, labels prefixed [D11]/[D12] to keep the two
+      distinct rooms from colliding under identical names)
+  - D13 = Floaroma Meadow
+  - D14 = Oreburgh Gate
+  - D15 = Fullmoon Island
+  - D16 = Stark Mountain
+  - D17 = Sendoff Spring
+  - D18 + D19 = Unused/prototype data (not real locations -- merged into the
+      existing "Unused/Prototype Areas" card, same treatment as FR/LG's
+      leftover Sevii Isle data, in case a randomizer ever routes there anyway)
+  - D20 = Snowpoint Temple
+
+CONFIRMED VIA LIVE TESTING (second round):
+  - D22 = Maniac Tunnel (2 scattered occurrences merged into 1)
+  - D23 = Trophy Garden
+  - D24 = Iron Island, Outside (merged into the existing "Iron Island" card
+      alongside D01; D24's entries are prefixed [D24] to distinguish the
+      exterior rooms from D01's interior ones)
+  - D25 = Old Chateau
+  - D26 = Team Galactic HQ (4 scattered occurrences merged into 1, forming a
+      clean 9-floor building)
+  - D27 = Lake Verity, D28 = Lake Valor, D29 = Lake Acuity (each has 3
+      sub-entries, reportedly related to a before/after story-event state --
+      exact per-room mapping not yet confirmed, currently shown generically)
+  - D30 = Newmoon Island
+  - L02 = Valor Lakefront
+  - L03 = Acuity Lakefront
+  - T01 = Twinleaf Town, T02 = Sandgem Town, T03 = Floaroma Town,
+    T04 = Solaceon Town, T05 = Celestic Town, T06 = Survival Area,
+    T07 = Resort Area (all 7 T-groups now fully confirmed; each town's
+    scattered extra Poke Center floor entry, e.g. T02PC0103, folds into the
+    same merged "Poke Center" card entry)
+
+RESOLVED CONFLICT:
+  D31 = Fight Area / Battle Park / Battle Frontier, confirmed correct via
+  TCRF's hex offsets (as originally filed). "Exchange Service Corner" is
+  confirmed to be the real name of a specific interior room within that
+  complex, not a replacement for the whole group. No change needed to the
+  D31 card -- this is just informational for identifying that specific room
+  later (the exact sub-entry corresponding to it isn't pinned down yet).
+
+CONFIRMED VIA LIVE TESTING (third round):
+  - W220, W223, W226, W229, W230 = water/surf sections of their
+    correspondingly-numbered routes -- merged into those route cards.
+    Route 220 and 223 have NO separate land entry at all (fully-oceanic
+    segments), so the water entry alone forms their entire route card now.
+  - W231, W233 do NOT match any real Sinnoh route number -- left as their
+    own unidentified cards rather than guessing.
+
+BUG FOUND AND FIXED (this round): the location-grouping script used a fixed
+2-digit prefix match for everything, which is correct for C##/D##/T##/L##
+groups but wrong for routes/water-routes (3-digit numbers, e.g. "R201").
+This silently bundled routes 202-209 (and similar ranges) as garbage
+sub-entries inside Route 201's card instead of becoming their own cards.
+Fixed. All 30 real Sinnoh routes (201-230) are now confirmed cleanly
+separated in the tracker's location list.
+
+ANOMALY FLAGGED: "R232" exists in the data (index 409) but isn't a real
+Sinnoh route (routes only go to 230). Filed as "Route 232 (unconfirmed --
+not a known Sinnoh route number)" rather than presented as fact.
+
+CONFIRMED VIA LIVE TESTING (fourth round -- effectively final):
+  - D06 = Great Marsh
+  - D21 = Wayward Cave
+  - D32, D33, D34, D35 = unused/prototype data. Supporting evidence: D32R0201
+    and D33R0101 specifically appear in TCRF's Unused Maps article (items
+    7.7 and 9.7 in the earlier hex cross-reference); D34/D35 sit in a
+    tail-end cluster alongside other clearly-special standalone entries
+    like "HIROBA". Merged into the existing "Unused/Prototype Areas" card
+    (same treatment as D18/D19), each prefixed to keep origins distinct.
+  - L01 = Verity Lakefront (confirms the earlier prediction, matching
+    L02/L03 = Valor/Acuity Lakefront)
+
+STATUS: only 1 group left fully unidentified -- L04 -- plus the R232
+anomaly (not a real Sinnoh route number, real identity unknown). Started
+from 47 unresolved groups; both practically closed out now.
+
+NOTE: the tracker's static starter location list (BLANK_TEMPLATE_SOURCE) was
+rebuilt from this same mapname.bin data as of this update -- 86 cards, 499
+warps, replacing the original hand-curated 90-card list. Poke Center floors
+are merged into a single "Poke Center" entry per city (the 1F/2F/3F split
+isn't a real randomizable warp, just fixed staircases). Multi-room Gyms
+(Eterna: 2 rooms, Hearthome: 13 rooms, Sunyshore: 3 rooms) were kept as
+separate entries, since those genuinely are distinct puzzle rooms in-game.
+Groups whose extra entries were scattered elsewhere in the file as literal
+continuations of the same room sequence (D22, D24, D26, D31, T02-T07, W22)
+were merged across all their occurrences rather than only using the first.
+========================================================================
+RUN STRUCTURE OVERVIEW (in file order)
+========================================================================
+
+[0] EVERYWHERE  (standalone/special value)
+[1] NOTHING  (standalone/special value)
+[2] UG  (standalone/special value)
+C01: indices 3-32 (30 entries)
+C02: indices 33-44 (12 entries)
+C03: indices 45-64 (20 entries)
+C04: indices 65-85 (21 entries)
+C05: indices 86-119 (34 entries)
+C06: indices 120-131 (12 entries)
+C07: indices 132-149 (18 entries)
+C08: indices 150-164 (15 entries)
+C09: indices 165-171 (7 entries)
+C10: indices 172-187 (16 entries)
+C11: indices 188-196 (9 entries)
+D01: indices 197-199 (3 entries)
+D02: indices 200-201 (2 entries)
+D03: indices 202-203 (2 entries)
+D04: indices 204-205 (2 entries)
+D05: indices 206-221 (16 entries)
+D06: indices 222-223 (2 entries)
+D07: indices 224-242 (19 entries)
+D09: indices 243-249 (7 entries)
+D10: indices 250-251 (2 entries)
+D11: indices 252-253 (2 entries)
+D12: indices 254-254 (1 entries)
+D13: indices 255-257 (3 entries)
+D14: indices 258-259 (2 entries)
+D15: indices 260-261 (2 entries)
+D16: indices 262-265 (4 entries)
+D17: indices 266-273 (8 entries)
+D18: indices 274-275 (2 entries)
+D19: indices 276-277 (2 entries)
+D20: indices 278-283 (6 entries)
+D21: indices 284-285 (2 entries)
+D22: indices 286-286 (1 entries)
+D23: indices 287-287 (1 entries)
+D24: indices 288-294 (7 entries)
+D25: indices 295-304 (10 entries)
+D26: indices 305-310 (6 entries)
+D27: indices 311-313 (3 entries)
+D28: indices 314-316 (3 entries)
+D29: indices 317-319 (3 entries)
+D30: indices 320-321 (2 entries)
+D31: indices 322-331 (10 entries)
+[332] DIRECT2  (standalone/special value)
+[333] DIRECT4  (standalone/special value)
+L01: indices 334-335 (2 entries)
+L02: indices 336-339 (4 entries)
+L03: indices 340-340 (1 entries)
+L04: indices 341-341 (1 entries)
+R20: indices 342-361 (20 entries)
+R21: indices 362-391 (30 entries)
+R22: indices 392-407 (16 entries)
+R23: indices 408-409 (2 entries)
+[410] RECORD  (standalone/special value)
+T01: indices 411-417 (7 entries)
+T02: indices 418-425 (8 entries)
+T03: indices 426-432 (7 entries)
+T04: indices 433-441 (9 entries)
+T05: indices 442-449 (8 entries)
+T06: indices 450-456 (7 entries)
+T07: indices 457-465 (9 entries)
+[466] UNION  (standalone/special value)
+W22: indices 467-470 (4 entries)
+W23: indices 471-473 (3 entries)
+C01 (occurrence #2): indices 474-474 (1 entries)
+C02 (occurrence #2): indices 475-475 (1 entries)
+C03 (occurrence #2): indices 476-476 (1 entries)
+C04 (occurrence #2): indices 477-477 (1 entries)
+C05 (occurrence #2): indices 478-478 (1 entries)
+C06 (occurrence #2): indices 479-479 (1 entries)
+C07 (occurrence #2): indices 480-480 (1 entries)
+C08 (occurrence #2): indices 481-481 (1 entries)
+C09 (occurrence #2): indices 482-482 (1 entries)
+C10 (occurrence #2): indices 483-483 (1 entries)
+C11 (occurrence #2): indices 484-484 (1 entries)
+T02 (occurrence #2): indices 485-485 (1 entries)
+T03 (occurrence #2): indices 486-486 (1 entries)
+T04 (occurrence #2): indices 487-487 (1 entries)
+T05 (occurrence #2): indices 488-488 (1 entries)
+T06 (occurrence #2): indices 489-489 (1 entries)
+T07 (occurrence #2): indices 490-490 (1 entries)
+C02 (occurrence #3): indices 491-491 (1 entries)
+R21 (occurrence #2): indices 492-492 (1 entries)
+D31 (occurrence #2): indices 493-493 (1 entries)
+D26 (occurrence #2): indices 494-494 (1 entries)
+C10 (occurrence #3): indices 495-496 (2 entries)
+D26 (occurrence #3): indices 497-497 (1 entries)
+R22 (occurrence #2): indices 498-498 (1 entries)
+W22 (occurrence #2): indices 499-499 (1 entries)
+R22 (occurrence #3): indices 500-503 (4 entries)
+D06 (occurrence #2): indices 504-509 (6 entries)
+D05 (occurrence #2): indices 510-511 (2 entries)
+D22 (occurrence #2): indices 512-513 (2 entries)
+D24 (occurrence #2): indices 514-514 (1 entries)
+D07 (occurrence #2): indices 515-515 (1 entries)
+C08 (occurrence #3): indices 516-516 (1 entries)
+C01 (occurrence #3): indices 517-517 (1 entries)
+D17 (occurrence #2): indices 518-557 (40 entries)
+C05 (occurrence #3): indices 558-558 (1 entries)
+D32: indices 559-565 (7 entries)
+C07 (occurrence #3): indices 566-566 (1 entries)
+C01 (occurrence #4): indices 567-568 (2 entries)
+D26 (occurrence #4): indices 569-569 (1 entries)
+D33: indices 570-570 (1 entries)
+C04 (occurrence #3): indices 571-572 (2 entries)
+D34: indices 573-583 (11 entries)
+D05 (occurrence #3): indices 584-585 (2 entries)
+[586] HIROBA  (standalone/special value)
+D35: indices 587-592 (6 entries)
+
+========================================================================
+FULL RUN BREAKDOWN (with every sub-entry)
+========================================================================
+
+--- C01 ---
+  [3]	C01
+  [4]	C01FS0101
+  [5]	C01GYM0101
+  [6]	C01PC0101
+  [7]	C01PC0102
+  [8]	C01R0101
+  [9]	C01R0102
+  [10]	C01R0103
+  [11]	C01R0201
+  [12]	C01R0202
+  [13]	C01R0203
+  [14]	C01R0204
+  [15]	C01R0205
+  [16]	C01R0206
+  [17]	C01R0207
+  [18]	C01R0208
+  [19]	C01R0301
+  [20]	C01R0302
+  [21]	C01R0303
+  [22]	C01R0304
+  [23]	C01R0401
+  [24]	C01R0501
+  [25]	C01R0502
+  [26]	C01R0503
+  [27]	C01R0504
+  [28]	C01R0601
+  [29]	C01R0701
+  [30]	C01R0801
+  [31]	C01R0901
+  [32]	C01R1001
+
+--- C02 ---
+  [33]	C02
+  [34]	C02FS0101
+  [35]	C02GYM0101
+  [36]	C02PC0101
+  [37]	C02PC0102
+  [38]	C02R0101
+  [39]	C02R0102
+  [40]	C02R0103
+  [41]	C02R0201
+  [42]	C02R0301
+  [43]	C02R0401
+  [44]	C02R0501
+
+--- C03 ---
+  [45]	C03
+  [46]	C03FS0101
+  [47]	C03GYM0101
+  [48]	C03PC0101
+  [49]	C03PC0102
+  [50]	C03R0101
+  [51]	C03R0102
+  [52]	C03R0103
+  [53]	C03R0104
+  [54]	C03R0201
+  [55]	C03R0202
+  [56]	C03R0203
+  [57]	C03R0204
+  [58]	C03R0301
+  [59]	C03R0401
+  [60]	C03R0501
+  [61]	C03R0601
+  [62]	C03R0602
+  [63]	C03R0603
+  [64]	C03R0701
+
+--- C04 ---
+  [65]	C04
+  [66]	C04FS0101
+  [67]	C04GYM0101
+  [68]	C04GYM0102
+  [69]	C04PC0101
+  [70]	C04PC0102
+  [71]	C04R0101
+  [72]	C04R0201
+  [73]	C04R0202
+  [74]	C04R0203
+  [75]	C04R0204
+  [76]	C04R0301
+  [77]	C04R0302
+  [78]	C04R0303
+  [79]	C04R0304
+  [80]	C04R0401
+  [81]	C04R0501
+  [82]	C04R0601
+  [83]	C04R0701
+  [84]	C04R0801
+  [85]	C04R0901
+
+--- C05 ---
+  [86]	C05
+  [87]	C05FS0101
+  [88]	C05GYM0101
+  [89]	C05GYM0102
+  [90]	C05GYM0103
+  [91]	C05GYM0104
+  [92]	C05GYM0105
+  [93]	C05GYM0106
+  [94]	C05GYM0107
+  [95]	C05GYM0108
+  [96]	C05GYM0109
+  [97]	C05GYM0110
+  [98]	C05GYM0111
+  [99]	C05GYM0112
+  [100]	C05GYM0113
+  [101]	C05PC0101
+  [102]	C05PC0102
+  [103]	C05R0101
+  [104]	C05R0102
+  [105]	C05R0103
+  [106]	C05R0201
+  [107]	C05R0301
+  [108]	C05R0401
+  [109]	C05R0501
+  [110]	C05R0601
+  [111]	C05R0701
+  [112]	C05R0801
+  [113]	C05R0802
+  [114]	C05R0803
+  [115]	C05R0901
+  [116]	C05R1001
+  [117]	C05R1101
+  [118]	C05R1102
+  [119]	C05R1201
+
+--- C06 ---
+  [120]	C06
+  [121]	C06FS0101
+  [122]	C06GYM0101
+  [123]	C06PC0101
+  [124]	C06PC0102
+  [125]	C06R0101
+  [126]	C06R0102
+  [127]	C06R0201
+  [128]	C06R0301
+  [129]	C06R0401
+  [130]	C06R0501
+  [131]	C06R0601
+
+--- C07 ---
+  [132]	C07
+  [133]	C07GYM0101
+  [134]	C07PC0101
+  [135]	C07PC0102
+  [136]	C07R0101
+  [137]	C07R0201
+  [138]	C07R0202
+  [139]	C07R0203
+  [140]	C07R0204
+  [141]	C07R0205
+  [142]	C07R0206
+  [143]	C07R0301
+  [144]	C07R0401
+  [145]	C07R0501
+  [146]	C07R0601
+  [147]	C07R0701
+  [148]	C07R0801
+  [149]	C07R0901
+
+--- C08 ---
+  [150]	C08
+  [151]	C08PC0101
+  [152]	C08PC0102
+  [153]	C08FS0101
+  [154]	C08GYM0101
+  [155]	C08GYM0102
+  [156]	C08GYM0103
+  [157]	C08R0101
+  [158]	C08R0201
+  [159]	C08R0301
+  [160]	C08R0401
+  [161]	C08R0501
+  [162]	C08R0601
+  [163]	C08R0701
+  [164]	C08R0801
+
+--- C09 ---
+  [165]	C09
+  [166]	C09FS0101
+  [167]	C09GYM0101
+  [168]	C09PC0101
+  [169]	C09PC0102
+  [170]	C09R0101
+  [171]	C09R0201
+
+--- C10 ---
+  [172]	C10
+  [173]	C10PC0101
+  [174]	C10PC0102
+  [175]	C10R0101
+  [176]	C10R0102
+  [177]	C10R0103
+  [178]	C10R0104
+  [179]	C10R0105
+  [180]	C10R0106
+  [181]	C10R0107
+  [182]	C10R0108
+  [183]	C10R0109
+  [184]	C10R0110
+  [185]	C10R0111
+  [186]	C10R0112
+  [187]	C10R0113
+
+--- C11 ---
+  [188]	C11
+  [189]	C11PC0101
+  [190]	C11PC0102
+  [191]	C11FS0101
+  [192]	C11R0101
+  [193]	C11R0201
+  [194]	C11R0301
+  [195]	C11R0401
+  [196]	C11R0501
+
+--- D01 ---
+  [197]	D01
+  [198]	D01R0101
+  [199]	D01R0102
+
+--- D02 ---
+  [200]	D02
+  [201]	D02R0101
+
+--- D03 ---
+  [202]	D03
+  [203]	D03R0101
+
+--- D04 ---
+  [204]	D04
+  [205]	D04R0101
+
+--- D05 ---
+  [206]	D05
+  [207]	D05R0101
+  [208]	D05R0102
+  [209]	D05R0103
+  [210]	D05R0104
+  [211]	D05R0105
+  [212]	D05R0106
+  [213]	D05R0107
+  [214]	D05R0108
+  [215]	D05R0109
+  [216]	D05R0110
+  [217]	D05R0111
+  [218]	D05R0112
+  [219]	D05R0113
+  [220]	D05R0114
+  [221]	D05R0115
+
+--- D06 ---
+  [222]	D06
+  [223]	D06R0101
+
+--- D07 ---
+  [224]	D07
+  [225]	D07R0101
+  [226]	D07R0102
+  [227]	D07R0103
+  [228]	D07R0104
+  [229]	D07R0105
+  [230]	D07R0106
+  [231]	D07R0107
+  [232]	D07R0108
+  [233]	D07R0109
+  [234]	D07R0110
+  [235]	D07R0111
+  [236]	D07R0112
+  [237]	D07R0113
+  [238]	D07R0114
+  [239]	D07R0115
+  [240]	D07R0116
+  [241]	D07R0117
+  [242]	D07R0118
+
+--- D09 ---
+  [243]	D09
+  [244]	D09R0101
+  [245]	D09R0102
+  [246]	D09R0103
+  [247]	D09R0104
+  [248]	D09R0105
+  [249]	D09R0106
+
+--- D10 ---
+  [250]	D10
+  [251]	D10R0101
+
+--- D11 ---
+  [252]	D11
+  [253]	D11R0101
+
+--- D12 ---
+  [254]	D12R0101
+
+--- D13 ---
+  [255]	D13
+  [256]	D13R0101
+  [257]	D13R0102
+
+--- D14 ---
+  [258]	D14R0101
+  [259]	D14R0102
+
+--- D15 ---
+  [260]	D15
+  [261]	D15R0101
+
+--- D16 ---
+  [262]	D16
+  [263]	D16R0101
+  [264]	D16R0102
+  [265]	D16R0103
+
+--- D17 ---
+  [266]	D17
+  [267]	D17R0101
+  [268]	D17R0102
+  [269]	D17R0103
+  [270]	D17R0104
+  [271]	D17R0105
+  [272]	D17R0106
+  [273]	D17R0107
+
+--- D18 ---
+  [274]	D18
+  [275]	D18R0101
+
+--- D19 ---
+  [276]	D19A
+  [277]	D19B
+
+--- D20 ---
+  [278]	D20R0101
+  [279]	D20R0102
+  [280]	D20R0103
+  [281]	D20R0104
+  [282]	D20R0105
+  [283]	D20R0106
+
+--- D21 ---
+  [284]	D21R0101
+  [285]	D21R0102
+
+--- D22 ---
+  [286]	D22R0101
+
+--- D23 ---
+  [287]	D23R0101
+
+--- D24 ---
+  [288]	D24
+  [289]	D24R0101
+  [290]	D24R0102
+  [291]	D24R0103
+  [292]	D24R0104
+  [293]	D24R0105
+  [294]	D24R0106
+
+--- D25 ---
+  [295]	D25R0101
+  [296]	D25R0102
+  [297]	D25R0103
+  [298]	D25R0104
+  [299]	D25R0105
+  [300]	D25R0106
+  [301]	D25R0107
+  [302]	D25R0108
+  [303]	D25R0109
+  [304]	D25R1001
+
+--- D26 ---
+  [305]	D26R0101
+  [306]	D26R0102
+  [307]	D26R0103
+  [308]	D26R0104
+  [309]	D26R0105
+  [310]	D26R0106
+
+--- D27 ---
+  [311]	D27R0101
+  [312]	D27R0102
+  [313]	D27R0103
+
+--- D28 ---
+  [314]	D28R0101
+  [315]	D28R0102
+  [316]	D28R0103
+
+--- D29 ---
+  [317]	D29R0101
+  [318]	D29R0102
+  [319]	D29R0103
+
+--- D30 ---
+  [320]	D30
+  [321]	D30R0101
+
+--- D31 ---
+  [322]	D31
+  [323]	D31R0101
+  [324]	D31R0102
+  [325]	D31R0103
+  [326]	D31R0201
+  [327]	D31R0202
+  [328]	D31R0203
+  [329]	D31R0204
+  [330]	D31R0205
+  [331]	D31R0206
+
+--- L01 ---
+  [334]	L01
+  [335]	L01R0101
+
+--- L02 ---
+  [336]	L02
+  [337]	L02R0101
+  [338]	L02R0201
+  [339]	L02R0301
+
+--- L03 ---
+  [340]	L03
+
+--- L04 ---
+  [341]	L04
+
+--- R20 ---
+  [342]	R201
+  [343]	R202
+  [344]	R203
+  [345]	R204A
+  [346]	R204B
+  [347]	R205A
+  [348]	R205AR0101
+  [349]	R205B
+  [350]	R206
+  [351]	R206R0101
+  [352]	R206R0201
+  [353]	R207
+  [354]	R208
+  [355]	R208R0101
+  [356]	R209
+  [357]	R209R0101
+  [358]	R209R0102
+  [359]	R209R0103
+  [360]	R209R0104
+  [361]	R209R0105
+
+--- R21 ---
+  [362]	R210A
+  [363]	R210B
+  [364]	R210BR0101
+  [365]	R211A
+  [366]	R211B
+  [367]	R212A
+  [368]	R212AR0101
+  [369]	R212AR0102
+  [370]	R212AR0103
+  [371]	R212B
+  [372]	R212BR0101
+  [373]	R213
+  [374]	R213R0101
+  [375]	R213R0201
+  [376]	R213R0301
+  [377]	R213R0401
+  [378]	R213R0501
+  [379]	R213R0601
+  [380]	R214
+  [381]	R214R0101
+  [382]	R215
+  [383]	R216
+  [384]	R216R0101
+  [385]	R217
+  [386]	R217R0101
+  [387]	R217R0201
+  [388]	R218
+  [389]	R218R0101
+  [390]	R218R0201
+  [391]	R219
+
+--- R22 ---
+  [392]	R221
+  [393]	R221R0101
+  [394]	R221R0201
+  [395]	R222
+  [396]	R222R0101
+  [397]	R222R0201
+  [398]	R222R0301
+  [399]	R224
+  [400]	R225
+  [401]	R226A
+  [402]	R226B
+  [403]	R227
+  [404]	R227A
+  [405]	R227B
+  [406]	R228
+  [407]	R229
+
+--- R23 ---
+  [408]	R230
+  [409]	R232
+
+--- T01 ---
+  [411]	T01
+  [412]	T01R0101
+  [413]	T01R0102
+  [414]	T01R0201
+  [415]	T01R0202
+  [416]	T01R0301
+  [417]	T01R0401
+
+--- T02 ---
+  [418]	T02
+  [419]	T02FS0101
+  [420]	T02PC0101
+  [421]	T02PC0102
+  [422]	T02R0101
+  [423]	T02R0201
+  [424]	T02R0202
+  [425]	T02R0301
+
+--- T03 ---
+  [426]	T03
+  [427]	T03FS0101
+  [428]	T03PC0101
+  [429]	T03PC0102
+  [430]	T03R0101
+  [431]	T03R0201
+  [432]	T03R0301
+
+--- T04 ---
+  [433]	T04
+  [434]	T04FS0101
+  [435]	T04PC0101
+  [436]	T04PC0102
+  [437]	T04R0101
+  [438]	T04R0201
+  [439]	T04R0301
+  [440]	T04R0401
+  [441]	T04R0501
+
+--- T05 ---
+  [442]	T05
+  [443]	T05PC0101
+  [444]	T05PC0102
+  [445]	T05R0101
+  [446]	T05R0201
+  [447]	T05R0301
+  [448]	T05R0401
+  [449]	T05R0501
+
+--- T06 ---
+  [450]	T06
+  [451]	T06FS0101
+  [452]	T06PC0101
+  [453]	T06PC0102
+  [454]	T06R0101
+  [455]	T06R0201
+  [456]	T06R0301
+
+--- T07 ---
+  [457]	T07
+  [458]	T07FS0101
+  [459]	T07PC0101
+  [460]	T07PC0102
+  [461]	T07R0101
+  [462]	T07R0102
+  [463]	T07R0103
+  [464]	T07R0201
+  [465]	T07R0301
+
+--- W22 ---
+  [467]	W220
+  [468]	W223
+  [469]	W226
+  [470]	W229
+
+--- W23 ---
+  [471]	W230
+  [472]	W231
+  [473]	W233
+
+--- C01 (occurrence #2) ---
+  [474]	C01PC0103
+
+--- C02 (occurrence #2) ---
+  [475]	C02PC0103
+
+--- C03 (occurrence #2) ---
+  [476]	C03PC0103
+
+--- C04 (occurrence #2) ---
+  [477]	C04PC0103
+
+--- C05 (occurrence #2) ---
+  [478]	C05PC0103
+
+--- C06 (occurrence #2) ---
+  [479]	C06PC0103
+
+--- C07 (occurrence #2) ---
+  [480]	C07PC0103
+
+--- C08 (occurrence #2) ---
+  [481]	C08PC0103
+
+--- C09 (occurrence #2) ---
+  [482]	C09PC0103
+
+--- C10 (occurrence #2) ---
+  [483]	C10PC0103
+
+--- C11 (occurrence #2) ---
+  [484]	C11PC0103
+
+--- T02 (occurrence #2) ---
+  [485]	T02PC0103
+
+--- T03 (occurrence #2) ---
+  [486]	T03PC0103
+
+--- T04 (occurrence #2) ---
+  [487]	T04PC0103
+
+--- T05 (occurrence #2) ---
+  [488]	T05PC0103
+
+--- T06 (occurrence #2) ---
+  [489]	T06PC0103
+
+--- T07 (occurrence #2) ---
+  [490]	T07PC0103
+
+--- C02 (occurrence #3) ---
+  [491]	C02R0601
+
+--- R21 (occurrence #2) ---
+  [492]	R210AR0101
+
+--- D31 (occurrence #2) ---
+  [493]	D31R0207
+
+--- D26 (occurrence #2) ---
+  [494]	D26R0107
+
+--- C10 (occurrence #3) ---
+  [495]	C10R0114
+  [496]	C10R0115
+
+--- D26 (occurrence #3) ---
+  [497]	D26R0108
+
+--- R22 (occurrence #2) ---
+  [498]	R225R0101
+
+--- W22 (occurrence #2) ---
+  [499]	W226R0101
+
+--- R22 (occurrence #3) ---
+  [500]	R227R0101
+  [501]	R228R0101
+  [502]	R228R0201
+  [503]	R228R0301
+
+--- D06 (occurrence #2) ---
+  [504]	D06R0201
+  [505]	D06R0202
+  [506]	D06R0203
+  [507]	D06R0204
+  [508]	D06R0205
+  [509]	D06R0206
+
+--- D05 (occurrence #2) ---
+  [510]	D05R0116
+  [511]	D05R0117
+
+--- D22 (occurrence #2) ---
+  [512]	D22R0102
+  [513]	D22R0103
+
+--- D24 (occurrence #2) ---
+  [514]	D24R0201
+
+--- D07 (occurrence #2) ---
+  [515]	D07R0119
+
+--- C08 (occurrence #3) ---
+  [516]	C08R0802
+
+--- C01 (occurrence #3) ---
+  [517]	C01R0802
+
+--- D17 (occurrence #2) ---
+  [518]	D17R0108
+  [519]	D17R0109
+  [520]	D17R0110
+  [521]	D17R0111
+  [522]	D17R0112
+  [523]	D17R0113
+  [524]	D17R0114
+  [525]	D17R0115
+  [526]	D17R0116
+  [527]	D17R0117
+  [528]	D17R0118
+  [529]	D17R0119
+  [530]	D17R0120
+  [531]	D17R0121
+  [532]	D17R0122
+  [533]	D17R0123
+  [534]	D17R0124
+  [535]	D17R0125
+  [536]	D17R0126
+  [537]	D17R0127
+  [538]	D17R0128
+  [539]	D17R0129
+  [540]	D17R0130
+  [541]	D17R0131
+  [542]	D17R0132
+  [543]	D17R0133
+  [544]	D17R0134
+  [545]	D17R0135
+  [546]	D17R0136
+  [547]	D17R0137
+  [548]	D17R0138
+  [549]	D17R0139
+  [550]	D17R0140
+  [551]	D17R0141
+  [552]	D17R0142
+  [553]	D17R0143
+  [554]	D17R0144
+  [555]	D17R0145
+  [556]	D17R0146
+  [557]	D17R0147
+
+--- C05 (occurrence #3) ---
+  [558]	C05R1103
+
+--- D32 ---
+  [559]	D32
+  [560]	D32R0101
+  [561]	D32R0201
+  [562]	D32R0301
+  [563]	D32R0401
+  [564]	D32R0501
+  [565]	D32R0601
+
+--- C07 (occurrence #3) ---
+  [566]	C07R0207
+
+--- C01 (occurrence #4) ---
+  [567]	C01R0602
+  [568]	C01R0603
+
+--- D26 (occurrence #4) ---
+  [569]	D26R0109
+
+--- D33 ---
+  [570]	D33R0101
+
+--- C04 (occurrence #3) ---
+  [571]	C04R0205
+  [572]	C04R0206
+
+--- D34 ---
+  [573]	D34R0101
+  [574]	D34R0102
+  [575]	D34R0103
+  [576]	D34R0104
+  [577]	D34R0105
+  [578]	D34R0106
+  [579]	D34R0107
+  [580]	D34R0108
+  [581]	D34R0109
+  [582]	D34R0110
+  [583]	D34R0111
+
+--- D05 (occurrence #3) ---
+  [584]	D05R0118
+  [585]	D05R0119
+
+--- D35 ---
+  [587]	D35R0101
+  [588]	D35R0102
+  [589]	D35R0103
+  [590]	D35R0104
+  [591]	D35R0105
+  [592]	D35R0106
+
+========================================================================
+FLAT INDEX LIST (all 593 entries, in raw map-ID order -- use this to
+look up whatever number RAM Search finds)
+========================================================================
+
+[0]	EVERYWHERE
+[1]	NOTHING
+[2]	UG
+[3]	C01
+[4]	C01FS0101
+[5]	C01GYM0101
+[6]	C01PC0101
+[7]	C01PC0102
+[8]	C01R0101
+[9]	C01R0102
+[10]	C01R0103
+[11]	C01R0201
+[12]	C01R0202
+[13]	C01R0203
+[14]	C01R0204
+[15]	C01R0205
+[16]	C01R0206
+[17]	C01R0207
+[18]	C01R0208
+[19]	C01R0301
+[20]	C01R0302
+[21]	C01R0303
+[22]	C01R0304
+[23]	C01R0401
+[24]	C01R0501
+[25]	C01R0502
+[26]	C01R0503
+[27]	C01R0504
+[28]	C01R0601
+[29]	C01R0701
+[30]	C01R0801
+[31]	C01R0901
+[32]	C01R1001
+[33]	C02
+[34]	C02FS0101
+[35]	C02GYM0101
+[36]	C02PC0101
+[37]	C02PC0102
+[38]	C02R0101
+[39]	C02R0102
+[40]	C02R0103
+[41]	C02R0201
+[42]	C02R0301
+[43]	C02R0401
+[44]	C02R0501
+[45]	C03
+[46]	C03FS0101
+[47]	C03GYM0101
+[48]	C03PC0101
+[49]	C03PC0102
+[50]	C03R0101
+[51]	C03R0102
+[52]	C03R0103
+[53]	C03R0104
+[54]	C03R0201
+[55]	C03R0202
+[56]	C03R0203
+[57]	C03R0204
+[58]	C03R0301
+[59]	C03R0401
+[60]	C03R0501
+[61]	C03R0601
+[62]	C03R0602
+[63]	C03R0603
+[64]	C03R0701
+[65]	C04
+[66]	C04FS0101
+[67]	C04GYM0101
+[68]	C04GYM0102
+[69]	C04PC0101
+[70]	C04PC0102
+[71]	C04R0101
+[72]	C04R0201
+[73]	C04R0202
+[74]	C04R0203
+[75]	C04R0204
+[76]	C04R0301
+[77]	C04R0302
+[78]	C04R0303
+[79]	C04R0304
+[80]	C04R0401
+[81]	C04R0501
+[82]	C04R0601
+[83]	C04R0701
+[84]	C04R0801
+[85]	C04R0901
+[86]	C05
+[87]	C05FS0101
+[88]	C05GYM0101
+[89]	C05GYM0102
+[90]	C05GYM0103
+[91]	C05GYM0104
+[92]	C05GYM0105
+[93]	C05GYM0106
+[94]	C05GYM0107
+[95]	C05GYM0108
+[96]	C05GYM0109
+[97]	C05GYM0110
+[98]	C05GYM0111
+[99]	C05GYM0112
+[100]	C05GYM0113
+[101]	C05PC0101
+[102]	C05PC0102
+[103]	C05R0101
+[104]	C05R0102
+[105]	C05R0103
+[106]	C05R0201
+[107]	C05R0301
+[108]	C05R0401
+[109]	C05R0501
+[110]	C05R0601
+[111]	C05R0701
+[112]	C05R0801
+[113]	C05R0802
+[114]	C05R0803
+[115]	C05R0901
+[116]	C05R1001
+[117]	C05R1101
+[118]	C05R1102
+[119]	C05R1201
+[120]	C06
+[121]	C06FS0101
+[122]	C06GYM0101
+[123]	C06PC0101
+[124]	C06PC0102
+[125]	C06R0101
+[126]	C06R0102
+[127]	C06R0201
+[128]	C06R0301
+[129]	C06R0401
+[130]	C06R0501
+[131]	C06R0601
+[132]	C07
+[133]	C07GYM0101
+[134]	C07PC0101
+[135]	C07PC0102
+[136]	C07R0101
+[137]	C07R0201
+[138]	C07R0202
+[139]	C07R0203
+[140]	C07R0204
+[141]	C07R0205
+[142]	C07R0206
+[143]	C07R0301
+[144]	C07R0401
+[145]	C07R0501
+[146]	C07R0601
+[147]	C07R0701
+[148]	C07R0801
+[149]	C07R0901
+[150]	C08
+[151]	C08PC0101
+[152]	C08PC0102
+[153]	C08FS0101
+[154]	C08GYM0101
+[155]	C08GYM0102
+[156]	C08GYM0103
+[157]	C08R0101
+[158]	C08R0201
+[159]	C08R0301
+[160]	C08R0401
+[161]	C08R0501
+[162]	C08R0601
+[163]	C08R0701
+[164]	C08R0801
+[165]	C09
+[166]	C09FS0101
+[167]	C09GYM0101
+[168]	C09PC0101
+[169]	C09PC0102
+[170]	C09R0101
+[171]	C09R0201
+[172]	C10
+[173]	C10PC0101
+[174]	C10PC0102
+[175]	C10R0101
+[176]	C10R0102
+[177]	C10R0103
+[178]	C10R0104
+[179]	C10R0105
+[180]	C10R0106
+[181]	C10R0107
+[182]	C10R0108
+[183]	C10R0109
+[184]	C10R0110
+[185]	C10R0111
+[186]	C10R0112
+[187]	C10R0113
+[188]	C11
+[189]	C11PC0101
+[190]	C11PC0102
+[191]	C11FS0101
+[192]	C11R0101
+[193]	C11R0201
+[194]	C11R0301
+[195]	C11R0401
+[196]	C11R0501
+[197]	D01
+[198]	D01R0101
+[199]	D01R0102
+[200]	D02
+[201]	D02R0101
+[202]	D03
+[203]	D03R0101
+[204]	D04
+[205]	D04R0101
+[206]	D05
+[207]	D05R0101
+[208]	D05R0102
+[209]	D05R0103
+[210]	D05R0104
+[211]	D05R0105
+[212]	D05R0106
+[213]	D05R0107
+[214]	D05R0108
+[215]	D05R0109
+[216]	D05R0110
+[217]	D05R0111
+[218]	D05R0112
+[219]	D05R0113
+[220]	D05R0114
+[221]	D05R0115
+[222]	D06
+[223]	D06R0101
+[224]	D07
+[225]	D07R0101
+[226]	D07R0102
+[227]	D07R0103
+[228]	D07R0104
+[229]	D07R0105
+[230]	D07R0106
+[231]	D07R0107
+[232]	D07R0108
+[233]	D07R0109
+[234]	D07R0110
+[235]	D07R0111
+[236]	D07R0112
+[237]	D07R0113
+[238]	D07R0114
+[239]	D07R0115
+[240]	D07R0116
+[241]	D07R0117
+[242]	D07R0118
+[243]	D09
+[244]	D09R0101
+[245]	D09R0102
+[246]	D09R0103
+[247]	D09R0104
+[248]	D09R0105
+[249]	D09R0106
+[250]	D10
+[251]	D10R0101
+[252]	D11
+[253]	D11R0101
+[254]	D12R0101
+[255]	D13
+[256]	D13R0101
+[257]	D13R0102
+[258]	D14R0101
+[259]	D14R0102
+[260]	D15
+[261]	D15R0101
+[262]	D16
+[263]	D16R0101
+[264]	D16R0102
+[265]	D16R0103
+[266]	D17
+[267]	D17R0101
+[268]	D17R0102
+[269]	D17R0103
+[270]	D17R0104
+[271]	D17R0105
+[272]	D17R0106
+[273]	D17R0107
+[274]	D18
+[275]	D18R0101
+[276]	D19A
+[277]	D19B
+[278]	D20R0101
+[279]	D20R0102
+[280]	D20R0103
+[281]	D20R0104
+[282]	D20R0105
+[283]	D20R0106
+[284]	D21R0101
+[285]	D21R0102
+[286]	D22R0101
+[287]	D23R0101
+[288]	D24
+[289]	D24R0101
+[290]	D24R0102
+[291]	D24R0103
+[292]	D24R0104
+[293]	D24R0105
+[294]	D24R0106
+[295]	D25R0101
+[296]	D25R0102
+[297]	D25R0103
+[298]	D25R0104
+[299]	D25R0105
+[300]	D25R0106
+[301]	D25R0107
+[302]	D25R0108
+[303]	D25R0109
+[304]	D25R1001
+[305]	D26R0101
+[306]	D26R0102
+[307]	D26R0103
+[308]	D26R0104
+[309]	D26R0105
+[310]	D26R0106
+[311]	D27R0101
+[312]	D27R0102
+[313]	D27R0103
+[314]	D28R0101
+[315]	D28R0102
+[316]	D28R0103
+[317]	D29R0101
+[318]	D29R0102
+[319]	D29R0103
+[320]	D30
+[321]	D30R0101
+[322]	D31
+[323]	D31R0101
+[324]	D31R0102
+[325]	D31R0103
+[326]	D31R0201
+[327]	D31R0202
+[328]	D31R0203
+[329]	D31R0204
+[330]	D31R0205
+[331]	D31R0206
+[332]	DIRECT2
+[333]	DIRECT4
+[334]	L01
+[335]	L01R0101
+[336]	L02
+[337]	L02R0101
+[338]	L02R0201
+[339]	L02R0301
+[340]	L03
+[341]	L04
+[342]	R201
+[343]	R202
+[344]	R203
+[345]	R204A
+[346]	R204B
+[347]	R205A
+[348]	R205AR0101
+[349]	R205B
+[350]	R206
+[351]	R206R0101
+[352]	R206R0201
+[353]	R207
+[354]	R208
+[355]	R208R0101
+[356]	R209
+[357]	R209R0101
+[358]	R209R0102
+[359]	R209R0103
+[360]	R209R0104
+[361]	R209R0105
+[362]	R210A
+[363]	R210B
+[364]	R210BR0101
+[365]	R211A
+[366]	R211B
+[367]	R212A
+[368]	R212AR0101
+[369]	R212AR0102
+[370]	R212AR0103
+[371]	R212B
+[372]	R212BR0101
+[373]	R213
+[374]	R213R0101
+[375]	R213R0201
+[376]	R213R0301
+[377]	R213R0401
+[378]	R213R0501
+[379]	R213R0601
+[380]	R214
+[381]	R214R0101
+[382]	R215
+[383]	R216
+[384]	R216R0101
+[385]	R217
+[386]	R217R0101
+[387]	R217R0201
+[388]	R218
+[389]	R218R0101
+[390]	R218R0201
+[391]	R219
+[392]	R221
+[393]	R221R0101
+[394]	R221R0201
+[395]	R222
+[396]	R222R0101
+[397]	R222R0201
+[398]	R222R0301
+[399]	R224
+[400]	R225
+[401]	R226A
+[402]	R226B
+[403]	R227
+[404]	R227A
+[405]	R227B
+[406]	R228
+[407]	R229
+[408]	R230
+[409]	R232
+[410]	RECORD
+[411]	T01
+[412]	T01R0101
+[413]	T01R0102
+[414]	T01R0201
+[415]	T01R0202
+[416]	T01R0301
+[417]	T01R0401
+[418]	T02
+[419]	T02FS0101
+[420]	T02PC0101
+[421]	T02PC0102
+[422]	T02R0101
+[423]	T02R0201
+[424]	T02R0202
+[425]	T02R0301
+[426]	T03
+[427]	T03FS0101
+[428]	T03PC0101
+[429]	T03PC0102
+[430]	T03R0101
+[431]	T03R0201
+[432]	T03R0301
+[433]	T04
+[434]	T04FS0101
+[435]	T04PC0101
+[436]	T04PC0102
+[437]	T04R0101
+[438]	T04R0201
+[439]	T04R0301
+[440]	T04R0401
+[441]	T04R0501
+[442]	T05
+[443]	T05PC0101
+[444]	T05PC0102
+[445]	T05R0101
+[446]	T05R0201
+[447]	T05R0301
+[448]	T05R0401
+[449]	T05R0501
+[450]	T06
+[451]	T06FS0101
+[452]	T06PC0101
+[453]	T06PC0102
+[454]	T06R0101
+[455]	T06R0201
+[456]	T06R0301
+[457]	T07
+[458]	T07FS0101
+[459]	T07PC0101
+[460]	T07PC0102
+[461]	T07R0101
+[462]	T07R0102
+[463]	T07R0103
+[464]	T07R0201
+[465]	T07R0301
+[466]	UNION
+[467]	W220
+[468]	W223
+[469]	W226
+[470]	W229
+[471]	W230
+[472]	W231
+[473]	W233
+[474]	C01PC0103
+[475]	C02PC0103
+[476]	C03PC0103
+[477]	C04PC0103
+[478]	C05PC0103
+[479]	C06PC0103
+[480]	C07PC0103
+[481]	C08PC0103
+[482]	C09PC0103
+[483]	C10PC0103
+[484]	C11PC0103
+[485]	T02PC0103
+[486]	T03PC0103
+[487]	T04PC0103
+[488]	T05PC0103
+[489]	T06PC0103
+[490]	T07PC0103
+[491]	C02R0601
+[492]	R210AR0101
+[493]	D31R0207
+[494]	D26R0107
+[495]	C10R0114
+[496]	C10R0115
+[497]	D26R0108
+[498]	R225R0101
+[499]	W226R0101
+[500]	R227R0101
+[501]	R228R0101
+[502]	R228R0201
+[503]	R228R0301
+[504]	D06R0201
+[505]	D06R0202
+[506]	D06R0203
+[507]	D06R0204
+[508]	D06R0205
+[509]	D06R0206
+[510]	D05R0116
+[511]	D05R0117
+[512]	D22R0102
+[513]	D22R0103
+[514]	D24R0201
+[515]	D07R0119
+[516]	C08R0802
+[517]	C01R0802
+[518]	D17R0108
+[519]	D17R0109
+[520]	D17R0110
+[521]	D17R0111
+[522]	D17R0112
+[523]	D17R0113
+[524]	D17R0114
+[525]	D17R0115
+[526]	D17R0116
+[527]	D17R0117
+[528]	D17R0118
+[529]	D17R0119
+[530]	D17R0120
+[531]	D17R0121
+[532]	D17R0122
+[533]	D17R0123
+[534]	D17R0124
+[535]	D17R0125
+[536]	D17R0126
+[537]	D17R0127
+[538]	D17R0128
+[539]	D17R0129
+[540]	D17R0130
+[541]	D17R0131
+[542]	D17R0132
+[543]	D17R0133
+[544]	D17R0134
+[545]	D17R0135
+[546]	D17R0136
+[547]	D17R0137
+[548]	D17R0138
+[549]	D17R0139
+[550]	D17R0140
+[551]	D17R0141
+[552]	D17R0142
+[553]	D17R0143
+[554]	D17R0144
+[555]	D17R0145
+[556]	D17R0146
+[557]	D17R0147
+[558]	C05R1103
+[559]	D32
+[560]	D32R0101
+[561]	D32R0201
+[562]	D32R0301
+[563]	D32R0401
+[564]	D32R0501
+[565]	D32R0601
+[566]	C07R0207
+[567]	C01R0602
+[568]	C01R0603
+[569]	D26R0109
+[570]	D33R0101
+[571]	C04R0205
+[572]	C04R0206
+[573]	D34R0101
+[574]	D34R0102
+[575]	D34R0103
+[576]	D34R0104
+[577]	D34R0105
+[578]	D34R0106
+[579]	D34R0107
+[580]	D34R0108
+[581]	D34R0109
+[582]	D34R0110
+[583]	D34R0111
+[584]	D05R0118
+[585]	D05R0119
+[586]	HIROBA
+[587]	D35R0101
+[588]	D35R0102
+[589]	D35R0103
+[590]	D35R0104
+[591]	D35R0105
+[592]	D35R0106
