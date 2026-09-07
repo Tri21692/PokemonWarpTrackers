@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tri's Warp Trackers</title>
+<style>
+  :root {
+    --bg: #08080a;
+    --text: #f2f2f0;
+    --text-dim: #9a9aa0;
+    --line: #2a2a2e;
+    --mono: 'IBM Plex Mono', 'Consolas', monospace;
+    --sans: 'Sora', 'Segoe UI', sans-serif;
+
+    --plat-red: #d62828;
+    --plat-red-dim: #6b1414;
+    --plat-gold: #f2c14e;
+
+    --frlg-fire: #d62828;
+    --frlg-leaf: #2e8b3d;
+    --frlg-gold: #f2c14e;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans);
+  }
+
+  body {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    min-height: 100vh; padding: 40px 24px; position: relative;
+  }
+
+  /* ambient background */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  }
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.28;
+    animation: drift 22s ease-in-out infinite;
+  }
+  .orb.o1 { width: 420px; height: 420px; background: var(--plat-red); top: -120px; left: -100px; animation-delay: 0s; }
+  .orb.o2 { width: 380px; height: 380px; background: var(--frlg-leaf); bottom: -140px; right: -80px; animation-delay: -7s; }
+  .orb.o3 { width: 280px; height: 280px; background: var(--frlg-gold); top: 40%; left: 60%; animation-delay: -14s; opacity: 0.16; }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -40px) scale(1.08); }
+    66% { transform: translate(-25px, 25px) scale(0.95); }
+  }
+
+  main {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center;
+    max-width: 760px; width: 100%; text-align: center;
+  }
+
+  h1 {
+    margin: 14px 0 10px; font-size: clamp(38px, 7vw, 64px); font-weight: 800; letter-spacing: -1.5px;
+    line-height: 1.05;
+    color: var(--frlg-gold);
+    text-shadow: 0 0 28px rgba(214,40,40,0.35), 0 0 44px rgba(46,139,61,0.2);
+    animation: fadeUp 0.8s ease 0.12s backwards;
+  }
+
+  .subtitle {
+    color: var(--text-dim); font-size: 15px; max-width: 460px; line-height: 1.6; margin-bottom: 16px;
+    animation: fadeUp 0.8s ease 0.24s backwards;
+  }
+
+  .version-tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--grey);
+    margin: -2px 0 12px;
+    animation: fadeUp 0.8s ease 0.18s backwards;
+  }
+
+  .pc-note {
+    display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.3px; color: var(--text-dim);
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; margin-bottom: 40px;
+    max-width: 480px; text-align: left; justify-content: center;
+    animation: fadeUp 0.8s ease 0.3s backwards;
+  }
+  .pc-note .pc-icon { opacity: 0.8; flex-shrink: 0; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .portals {
+    display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; width: 100%;
+  }
+
+  .portal {
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;
+    width: 300px; height: 200px; border-radius: 16px; padding: 22px;
+    text-decoration: none; color: var(--text);
+    border: 1px solid var(--line);
+    animation: fadeUp 0.8s ease backwards;
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .portal:nth-child(1) { animation-delay: 0.38s; }
+  .portal:nth-child(2) { animation-delay: 0.5s; }
+
+  .portal::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    transition: transform 0.6s cubic-bezier(.2,.8,.2,1), opacity 0.4s ease;
+  }
+  .portal::after {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg, rgba(8,8,10,0) 30%, rgba(8,8,10,0.85) 100%);
+  }
+
+  .portal-plat::before {
+    background:
+      radial-gradient(circle at 30% 20%, rgba(242,193,78,0.35), transparent 55%),
+      linear-gradient(135deg, #0d0d0e 0%, #0d0d0e 55%, var(--plat-red-dim) 100%);
+  }
+  .portal-frlg::before {
+    background:
+      radial-gradient(circle at 70% 25%, rgba(242,193,78,0.3), transparent 55%),
+      linear-gradient(135deg, #4a0e0e 0%, #4a0e0e 50%, #0e4a1e 50%, #0e4a1e 100%);
+  }
+
+  .portal:hover {
+    transform: translateY(-6px);
+    border-color: var(--frlg-gold);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(242,193,78,0.25);
+  }
+  .portal:hover::before { transform: scale(1.08); }
+
+  .portal-content { position: relative; z-index: 2; text-align: left; }
+  .portal-kicker {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--frlg-gold); margin-bottom: 6px; display: block;
+  }
+  .portal-title { font-size: 21px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.2px; }
+  .portal-sub { font-size: 12.5px; color: var(--text-dim); margin: 0; }
+  .portal-arrow {
+    position: absolute; top: 20px; right: 20px; z-index: 2;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text); font-size: 14px;
+    transition: transform 0.35s ease, background 0.35s ease;
+  }
+  .portal:hover .portal-arrow { transform: translate(3px, -3px); background: rgba(242,193,78,0.85); color: #1a1a1a; }
+
+  footer {
+    position: relative; z-index: 1; margin-top: 56px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.4px;
+    animation: fadeUp 0.8s ease 0.7s backwards;
+  }
+  footer span { color: var(--frlg-gold); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb { animation: none; }
+    h1, .subtitle, .version-tag, .pc-note, .portal, footer, .section-block { animation: none; }
+  }
+
+  @media (max-width: 520px) {
+    .portal { width: 100%; }
+    body { padding: 32px 16px; }
+    .pc-note { max-width: 100%; white-space: normal; text-align: left; }
+    .section-block { margin-top: 34px; }
+    .downloads-grid { flex-direction: column; }
+    .download-group { min-width: 0; padding: 14px; }
+    .dl-link { font-size: 10.5px; padding: 9px 8px; word-break: break-all; gap: 6px; flex-wrap: wrap; }
+    .faq-q { padding: 12px 14px; font-size: 13px; gap: 8px; }
+    .faq-a { padding: 0 14px 14px; font-size: 12px; }
+  }
+
+  .section-block {
+    position: relative; z-index: 1; width: 100%; max-width: 640px; margin-top: 44px;
+    animation: fadeUp 0.8s ease 0.6s backwards;
+  }
+  .section-kicker {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--frlg-gold); margin-bottom: 14px; text-align: center;
+  }
+
+  .downloads-grid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .download-group {
+    flex: 1; min-width: 240px; border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; background: rgba(255,255,255,0.02); text-align: left;
+  }
+  .download-group h3 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+  .download-group .dl-sub { margin: 0 0 12px; font-size: 11.5px; color: var(--text-dim); }
+  .dl-link {
+    display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text);
+    font-family: var(--mono); font-size: 12px; padding: 8px 10px; border-radius: 7px;
+    border: 1px solid var(--line); margin-bottom: 8px; transition: border-color 0.2s ease, color 0.2s ease;
+    flex-wrap: wrap; overflow-wrap: break-word; word-break: break-word;
+  }
+  .dl-link:last-child { margin-bottom: 0; }
+  .dl-link:hover { border-color: var(--frlg-gold); color: var(--frlg-gold); }
+  .dl-link .dl-icon { flex-shrink: 0; opacity: 0.7; }
+
+  .faq-list { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .faq-item {
+    border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.02);
+    overflow: hidden;
+  }
+  .faq-q {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 13px 16px; cursor: pointer; user-select: none; font-size: 13.5px; font-weight: 600;
+  }
+  .faq-q > span:first-child { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+  .faq-q:hover { color: var(--frlg-gold); }
+  .faq-q .faq-chev { font-size: 11px; color: var(--text-dim); transition: transform 0.2s ease; flex-shrink: 0; }
+  .faq-item.open .faq-q .faq-chev { transform: rotate(90deg); }
+  .faq-a { display: none; padding: 0 16px 15px; font-size: 12.5px; color: var(--text-dim); line-height: 1.6; }
+  .faq-item.open .faq-a { display: block; }
+  .faq-a code {
+    font-family: var(--mono); background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient">
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+</div>
+
+<main>
+  <h1>Tri's Warp Trackers</h1>
+  <p class="version-tag">Version 0.1</p>
+  <p class="subtitle">Pick a game to open its tracker. Both are self-contained &mdash; your progress saves right in the browser.</p>
+  <div class="pc-note"><span class="pc-icon">&#128187;</span> A PC is recommended for the best experience &mdash; the trackers work on mobile, but have a lot of detail packed in.</div>
+
+  <div class="portals">
+    <a class="portal portal-plat" href="platinum_warp_tracker.html">
+      <div class="portal-arrow">&#8599;</div>
+      <div class="portal-content">
+        <span class="portal-kicker">Sinnoh</span>
+        <p class="portal-title">Platinum</p>
+        <p class="portal-sub">Track every warp across Sinnoh</p>
+      </div>
+    </a>
+    <a class="portal portal-frlg" href="firered_leafgreen_warp_tracker.html">
+      <div class="portal-arrow">&#8599;</div>
+      <div class="portal-content">
+        <span class="portal-kicker">Kanto &amp; Sevii</span>
+        <p class="portal-title">FireRed / LeafGreen</p>
+        <p class="portal-sub">Track every warp across Kanto</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-block">
+    <div class="section-kicker">Live Tracking &mdash; Downloads</div>
+    <div class="downloads-grid">
+      <div class="download-group">
+        <h3>Platinum</h3>
+        <p class="dl-sub">BizHawk NDS core</p>
+        <a class="dl-link" href="Platinum/platinum_location_bridge_file.lua" download>
+          <span class="dl-icon">&#8681;</span> platinum_location_bridge_file.lua
+        </a>
+        <a class="dl-link" href="Platinum/platinum_bridge_server_file.js" download>
+          <span class="dl-icon">&#8681;</span> platinum_bridge_server_file.js
+        </a>
+      </div>
+      <div class="download-group">
+        <h3>FireRed / LeafGreen</h3>
+        <p class="dl-sub">BizHawk GBA core</p>
+        <a class="dl-link" href="FRLG/location_bridge_file.lua" download>
+          <span class="dl-icon">&#8681;</span> location_bridge_file.lua
+        </a>
+        <a class="dl-link" href="FRLG/bridge_server_file.js" download>
+          <span class="dl-icon">&#8681;</span> bridge_server_file.js
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-kicker">FAQ</div>
+    <div class="faq-list" id="faqList">
+      <div class="faq-item">
+        <div class="faq-q"><span>Do I need Live Tracking to use the tracker?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">No. Both trackers work completely fine on their own &mdash; you can log warps by hand as you find them. Live Tracking is an optional add-on that watches your emulator's memory and fills in warps automatically as you walk through them.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>What do I need to set up Live Tracking?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">
+          Three things: <b>BizHawk</b> (the emulator), <b>Node.js</b> (to run the small local bridge server), and the two files for your game from the Downloads section above &mdash; a Lua script that runs inside BizHawk, and a matching bridge server script that runs alongside it. The tracker page itself talks to that bridge server over your own machine's <code>localhost</code>, nothing goes out to the internet.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>How do I actually run it?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">
+          Put the Lua script and the matching bridge server file in the same folder, open the Lua script in BizHawk's Lua Console while your game is running, then run <code>node bridge_server_file.js</code> (or the Platinum equivalent) from that same folder &mdash; no path argument needed. Once both are running, hit the &#128225; <b>Live Tracking</b> toggle at the top of the tracker page.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Can I choose where the tracking file gets written?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">
+          Yes, without touching any code. Create a plain text file named <code>platinum_bridge_config.txt</code> (or <code>location_bridge_config.txt</code> for FireRed/LeafGreen) in the same folder as the Lua script, and put your desired full path on its own line inside it &mdash; e.g. <code>E:\Website\Live Tracking\Tracking\output.json</code>. The Lua script checks for this file every time it starts. Just remember to point the matching bridge server file at that same path when you run it.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>It says "Bridge server not reachable" &mdash; what do I check?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">
+          Make sure the Node bridge server is actually running (you should see it printing status in a terminal window), that the Lua script is loaded in BizHawk and your game isn't paused, and that nothing else on your machine is already using that port (<code>5556</code> for FireRed/LeafGreen, <code>5557</code> for Platinum).
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Is any of my data sent online?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">
+          No. Everything &mdash; your warp log, your notes, the live-tracking connection &mdash; stays on your own machine and in your own browser's local storage. Nothing here talks to a remote server.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>A location shows up as a weird code instead of a real name &mdash; is that a bug?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">
+          Not a bug &mdash; just an unmapped one. Both games' internal map IDs have been decoded for the large majority of well-known locations, but some less-common ones (especially in Platinum) haven't been identified yet and will show their raw internal codename until they are. You can always rename the warp yourself once you recognize where you are.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Does this work with a real cartridge, or only emulators?</span><span class="faq-chev">&#9656;</span></div>
+        <div class="faq-a">
+          Live Tracking specifically requires BizHawk, since it reads the game's memory directly &mdash; that only works in an emulator. The tracker itself (manual logging, no Live Tracking) works fine no matter how you're playing.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Created with the assistance of <span>ClaudeAI</span>. Use as you see fit. Please be aware that this tracker may include bugs.</footer>
+</main>
+
+<script>
+  document.getElementById("faqList").addEventListener("click", (e) => {
+    const item = e.target.closest(".faq-item");
+    if (item) item.classList.toggle("open");
+  });
+</script>
+
+</body>
+</html>
