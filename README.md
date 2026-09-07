@@ -37,10 +37,4 @@ Ports: FireRed/LeafGreen's bridge server runs on `5556`, Platinum's on `5557`, s
 
 Nothing here talks to the internet — Live Tracking is entirely `localhost` traffic between the Lua script, the bridge server, and the tracker page in your browser.
 
-## Deploying (e.g. Netlify)
-
-The site is just static files. Upload the whole repo root as-is — `index.html`'s download links expect the `Platinum/` and `FRLG/` folders to sit right next to it.
-
-## Credits
-
 Built with the assistance of Claude AI.
